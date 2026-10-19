@@ -155,6 +155,126 @@ p {
   }
 }
 
+/* ---------- Direktes Bearbeiten ---------- */
+.paragraph-wrap {
+  position: relative;
+
+  .paragraph {
+    cursor: text;
+  }
+
+  &:hover .paragraph,
+  &:focus-within .paragraph {
+    box-shadow: inset 0 0 0 1px var(--jc-border-input);
+  }
+
+  &:hover .paragraph-tools,
+  &:focus-within .paragraph-tools {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.paragraph-tools {
+  position: absolute;
+  top: -12px;
+  right: -6px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  font-family: var(--jc-font);
+}
+
+.tool {
+  border: 1px solid var(--jc-border-input);
+  background: #fff;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font: 500 11px var(--jc-font);
+  color: var(--jc-ink);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(47, 47, 40, 0.08);
+
+  &:hover:not(:disabled) {
+    border-color: var(--jc-teal);
+    color: var(--jc-teal-dark);
+  }
+
+  &.danger:hover:not(:disabled) {
+    border-color: var(--jc-red);
+    color: var(--jc-red);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.edit-box {
+  margin: 0 -6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-area {
+  width: 100%;
+  resize: vertical;
+  padding: 6px;
+  border: 1px solid var(--jc-teal);
+  border-radius: 6px;
+  box-shadow: var(--jc-focus-ring);
+  font: inherit;
+  line-height: inherit;
+  color: var(--jc-ink);
+  outline: none;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--jc-font);
+
+  .hint {
+    margin-right: auto;
+    font-size: 10.5px;
+    color: var(--jc-text-3);
+  }
+
+  button {
+    border-radius: 7px;
+    padding: 5px 11px;
+    font: 600 12px var(--jc-font);
+    cursor: pointer;
+  }
+}
+
+.edit-cancel {
+  border: 1px solid var(--jc-border-input);
+  background: #fff;
+  color: var(--jc-ink);
+}
+
+.edit-save {
+  border: none;
+  background: var(--jc-teal);
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: var(--jc-teal-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
 .closing {
   margin: 18px 0 34px;
 }

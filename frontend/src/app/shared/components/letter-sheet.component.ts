@@ -1,12 +1,23 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { CustomField, LetterMeta, LetterStyle, Profile } from '../../core/models/api.models';
 
 /**
  * Briefbogen mit Briefkopf (Klassisch/Modern). Variante „page“ zeigt das A4-Anschreiben im Editor,
- * Variante „preview“ die Briefkopf-Vorschau mit Platzhalter-Empfänger.
+ * Variante „preview“ die Briefkopf-Vorschau mit Platzhalter-Empfänger. Mit {@link editable} lassen sich
+ * Absätze direkt bearbeiten oder löschen; gespeichert wird über die Ausgaben (eine neue Version je Änderung).
  */
 @Component({
   selector: 'app-letter-sheet',
+  imports: [FormsModule],
   templateUrl: './letter-sheet.component.html',
   styleUrl: './letter-sheet.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,6 +31,16 @@ export class LetterSheetComponent {
   readonly highlighted = input<number[]>([]);
   readonly variant = input<'page' | 'preview'>('page');
   readonly dateLine = input<string>('');
+  /** Absätze direkt bearbeitbar (nur für die aktuelle Version). */
+  readonly editable = input(false);
+  /** Sperrt die Bearbeitung, z. B. während gespeichert wird. */
+  readonly busy = input(false);
+
+  readonly paragraphSave = output<{ index: number; text: string }>();
+  readonly paragraphDelete = output<number>();
+
+  protected readonly editingIndex = signal<number | null>(null);
+  protected readonly draft = signal('');
 
   protected readonly modern = computed(() => this.letterStyle() === 'MODERN');
   protected readonly name = computed(() => this.profile()?.fullName ?? '');
@@ -44,8 +65,52 @@ export class LetterSheetComponent {
   );
   protected readonly date = computed(() => this.meta()?.dateLine ?? this.dateLine());
 
+  constructor() {
+    // Neue Version oder gesperrte Bearbeitung beendet einen offenen Bearbeitungsmodus.
+    effect(() => {
+      this.paragraphs();
+      this.editable();
+      this.editingIndex.set(null);
+    });
+  }
+
   protected isHighlighted(index: number): boolean {
     return this.highlighted().includes(index);
+  }
+
+  protected startEdit(index: number): void {
+    this.draft.set(this.paragraphs()[index] ?? '');
+    this.editingIndex.set(index);
+  }
+
+  protected cancelEdit(): void {
+    this.editingIndex.set(null);
+  }
+
+  protected saveEdit(index: number): void {
+    const text = this.draft().trim();
+    if (!text) {
+      return;
+    }
+    if (text === this.paragraphs()[index]) {
+      this.editingIndex.set(null);
+      return;
+    }
+    this.paragraphSave.emit({ index, text });
+  }
+
+  protected onEditKey(event: KeyboardEvent, index: number): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.cancelEdit();
+    } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      this.saveEdit(index);
+    }
+  }
+
+  protected remove(index: number): void {
+    this.paragraphDelete.emit(index);
   }
 }
 

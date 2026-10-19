@@ -5,6 +5,7 @@ import com.jobcraft.dto.ApplicationSummaryDto;
 import com.jobcraft.dto.ChatRequest;
 import com.jobcraft.dto.CreateApplicationRequest;
 import com.jobcraft.dto.GenerateRequest;
+import com.jobcraft.dto.UpdateParagraphsRequest;
 import com.jobcraft.dto.UpdateStatusRequest;
 import com.jobcraft.model.LetterStyle;
 import com.jobcraft.service.ApplicationService;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -70,6 +72,15 @@ public class ApplicationController {
     public ResponseEntity<ApplicationDetailDto> chat(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id,
                                                      @Valid @RequestBody ChatRequest request) {
         return ResponseEntity.ok(applicationService.chat(CurrentUser.id(jwt), id, request.message()));
+    }
+
+    /**
+     * Speichert direkt im Editor bearbeitete oder gelöschte Absätze als neue Version.
+     */
+    @PutMapping("/{id}/paragraphs")
+    public ResponseEntity<ApplicationDetailDto> updateParagraphs(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id,
+                                                                 @Valid @RequestBody UpdateParagraphsRequest request) {
+        return ResponseEntity.ok(applicationService.updateParagraphs(CurrentUser.id(jwt), id, request.paragraphs()));
     }
 
     @PatchMapping("/{id}/status")

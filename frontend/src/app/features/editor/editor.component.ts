@@ -66,6 +66,7 @@ export class EditorComponent implements OnInit {
   protected readonly current = signal(0);
   protected readonly draft = signal('');
   protected readonly typing = signal(false);
+  protected readonly saving = signal(false);
   protected readonly pending = signal<string | null>(null);
   protected readonly highlighted = signal<number[]>([]);
   protected readonly letterStyle = signal<LetterStyle>('CLASSIC');
@@ -172,7 +173,7 @@ export class EditorComponent implements OnInit {
   protected send(text?: string): void {
     const app = this.application();
     const message = (text ?? this.draft()).trim();
-    if (!app || !message || this.typing()) {
+    if (!app || !message || this.typing() || this.saving()) {
       return;
     }
     this.pending.set(message);
@@ -196,6 +197,45 @@ export class EditorComponent implements OnInit {
             this.draft.set(message);
           }
           this.toast.show(errorMessage(err, 'Die KI konnte nicht antworten.'));
+        },
+      });
+  }
+
+  /** Ersetzt einen Absatz der aktuellen Version (neue Version). */
+  protected saveParagraph(index: number, text: string): void {
+    const paragraphs = [...this.paragraphs()];
+    paragraphs[index] = text;
+    this.saveParagraphs(paragraphs, 'Absatz gespeichert');
+  }
+
+  /** Entfernt einen Absatz der aktuellen Version (neue Version). */
+  protected deleteParagraph(index: number): void {
+    this.saveParagraphs(
+      this.paragraphs().filter((_, i) => i !== index),
+      `Absatz ${index + 1} gelöscht`,
+    );
+  }
+
+  private saveParagraphs(paragraphs: string[], toast: string): void {
+    const app = this.application();
+    if (!app || this.saving() || this.isOldVersion()) {
+      return;
+    }
+    this.saving.set(true);
+    this.api
+      .updateParagraphs(app.id, paragraphs)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.saving.set(false);
+          this.application.set(updated);
+          this.current.set(updated.versions.length - 1);
+          this.highlight(updated.versions[updated.versions.length - 1]?.changedParagraphs ?? []);
+          this.toast.show(toast);
+        },
+        error: (err: unknown) => {
+          this.saving.set(false);
+          this.toast.show(errorMessage(err, 'Die Änderung konnte nicht gespeichert werden.'));
         },
       });
   }

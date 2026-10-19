@@ -14,7 +14,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jobcraft.service.pdf.PdfGenerationService;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -98,8 +100,32 @@ class JobCraftIntegrationTest {
         assertThat(revised.get("messages").get(1).get("role").asText()).isEqualTo("USER");
         assertThat(revised.get("messages").get(2).get("meta").asText()).isEqualTo("v2 · Absatz 1 geändert");
 
+        List<String> current = new ArrayList<>();
+        revised.get("versions").get(1).get("paragraphs").forEach(p -> current.add(p.asText()));
+        current.set(1, "Mein eigener, direkt bearbeiteter Absatz.");
+        JsonNode edited = json(mvc.perform(auth(put("/api/applications/" + appId + "/paragraphs"), token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("paragraphs", current))))
+                .andExpect(status().isOk()));
+        assertThat(edited.get("versions")).hasSize(3);
+        assertThat(edited.get("versions").get(2).get("changedParagraphs").get(0).asInt()).isEqualTo(1);
+        assertThat(edited.get("messages").get(3).get("meta").asText()).isEqualTo("v3 · Absatz 2 bearbeitet");
+
+        mvc.perform(auth(put("/api/applications/" + appId + "/paragraphs"), token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("paragraphs", current))))
+                .andExpect(status().isBadRequest());
+
+        current.remove(0);
+        JsonNode deleted = json(mvc.perform(auth(put("/api/applications/" + appId + "/paragraphs"), token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("paragraphs", current))))
+                .andExpect(status().isOk()));
+        assertThat(deleted.get("versions").get(3).get("paragraphs")).hasSize(4);
+        assertThat(deleted.get("messages").get(4).get("meta").asText()).isEqualTo("v4 · Absatz 1 gelöscht");
+
         JsonNode list = json(mvc.perform(auth(get("/api/applications"), token)).andExpect(status().isOk()));
-        assertThat(list.get(0).get("latestVersion").asInt()).isEqualTo(2);
+        assertThat(list.get(0).get("latestVersion").asInt()).isEqualTo(4);
 
         when(pdfGenerationService.render(any(), anyList())).thenReturn(new byte[] {'%', 'P', 'D', 'F'});
         mvc.perform(auth(get("/api/applications/" + appId + "/pdf"), token).param("attachCv", "true"))

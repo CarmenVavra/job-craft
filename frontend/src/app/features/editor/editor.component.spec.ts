@@ -84,4 +84,48 @@ describe('EditorComponent', () => {
     expect(open).toHaveBeenCalledWith(PdfExportDialogComponent, jasmine.objectContaining({}));
     TestBed.inject(Dialog).closeAll();
   });
+
+  it('saves a directly edited paragraph as a new version', async () => {
+    const { fixture, el } = await setup();
+    (el.querySelectorAll('.paragraph-tools .tool')[0] as HTMLButtonElement).click();
+    await fixture.whenStable();
+    const area = el.querySelector('.edit-area') as HTMLTextAreaElement;
+    area.value = 'Absatz eins geändert';
+    area.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    (el.querySelector('.edit-save') as HTMLButtonElement).click();
+
+    const req = http.expectOne('/api/applications/app-1/paragraphs');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ paragraphs: ['Absatz eins geändert', 'Absatz zwei neu'] });
+    const updated = applicationFixture();
+    updated.versions = [
+      ...updated.versions,
+      {
+        version: 3,
+        paragraphs: ['Absatz eins geändert', 'Absatz zwei neu'],
+        changedParagraphs: [0],
+        createdAt: '',
+      },
+    ];
+    req.flush(updated);
+    await fixture.whenStable();
+
+    expect(text(el.querySelector('.version-chip.active'))).toBe('v3');
+    expect(el.querySelector('.edit-area')).toBeNull();
+    expect(el.querySelector('.paragraph.changed')?.textContent).toBe('Absatz eins geändert');
+  });
+
+  it('deletes a paragraph and disables editing for older versions', async () => {
+    const { fixture, el } = await setup();
+    (el.querySelectorAll('.paragraph-tools .danger')[0] as HTMLButtonElement).click();
+    const req = http.expectOne('/api/applications/app-1/paragraphs');
+    expect(req.request.body).toEqual({ paragraphs: ['Absatz zwei neu'] });
+    req.flush(applicationFixture());
+    await fixture.whenStable();
+
+    (el.querySelectorAll('.version-chip')[0] as HTMLButtonElement).click();
+    await fixture.whenStable();
+    expect(el.querySelector('.paragraph-tools')).toBeNull();
+  });
 });

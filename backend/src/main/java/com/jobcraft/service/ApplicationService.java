@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -208,6 +209,55 @@ public class ApplicationService {
                     "v" + version + " · " + changedLabel(revision.changedParagraphs()), version);
             return detail(app);
         });
+    }
+
+    /**
+     * Speichert manuell bearbeitete Absätze (Ändern oder Löschen im Editor) als neue Version.
+     *
+     * @param userId        Benutzer
+     * @param applicationId Bewerbung
+     * @param paragraphs    vollständige neue Absätze
+     * @return Zustand inkl. neuer Version
+     */
+    public ApplicationDetailDto updateParagraphs(UUID userId, UUID applicationId, List<String> paragraphs) {
+        List<String> next = paragraphs.stream().map(String::trim).toList();
+        return tx.execute(status -> {
+            Application app = load(userId, applicationId);
+            CoverLetter latest = coverLetterRepository.findFirstByApplicationIdOrderByVersionDesc(app.getId())
+                    .orElseThrow(() -> new ConflictException("Es gibt noch keinen Entwurf."));
+            List<String> current = latest.getParagraphs();
+            if (current.equals(next)) {
+                throw new BadRequestException("Es wurde nichts geändert.");
+            }
+            int deleted = deletedIndex(current, next);
+            List<Integer> changed = deleted >= 0 ? List.of() : IntStream.range(0, next.size())
+                    .filter(i -> i >= current.size() || !next.get(i).equals(current.get(i))).boxed().toList();
+            String label = deleted >= 0 ? "Absatz " + (deleted + 1) + " gelöscht"
+                    : changedLabel(changed).replace("geändert", "bearbeitet");
+            int version = latest.getVersion() + 1;
+            saveVersion(app.getId(), version, next, changed);
+            saveMessage(app.getId(), ChatRole.SYSTEM, deleted >= 0
+                    ? "Du hast Absatz " + (deleted + 1) + " gelöscht."
+                    : "Du hast den Text direkt bearbeitet.", "v" + version + " · " + label, version);
+            return detail(app);
+        });
+    }
+
+    /**
+     * @return Index des entfernten Absatzes, wenn {@code next} genau {@code current} ohne einen Absatz ist, sonst -1
+     */
+    private static int deletedIndex(List<String> current, List<String> next) {
+        if (next.size() != current.size() - 1) {
+            return -1;
+        }
+        for (int i = 0; i < current.size(); i++) {
+            List<String> without = new ArrayList<>(current);
+            without.remove(i);
+            if (without.equals(next)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**

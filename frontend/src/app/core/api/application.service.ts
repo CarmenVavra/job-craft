@@ -45,6 +45,11 @@ export class ApplicationService {
     return this.http.post<ApplicationDetail>(`/api/applications/${id}/chat`, { message });
   }
 
+  /** Speichert direkt bearbeitete oder gelöschte Absätze als neue Version. */
+  updateParagraphs(id: string, paragraphs: string[]): Observable<ApplicationDetail> {
+    return this.http.put<ApplicationDetail>(`/api/applications/${id}/paragraphs`, { paragraphs });
+  }
+
   updateStatus(id: string, status: ApplicationStatus): Observable<ApplicationDetail> {
     return this.http.patch<ApplicationDetail>(`/api/applications/${id}/status`, { status });
   }

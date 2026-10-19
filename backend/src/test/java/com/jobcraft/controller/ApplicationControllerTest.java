@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -102,6 +103,27 @@ class ApplicationControllerTest {
     void rejectsEmptyChatMessage() throws Exception {
         mvc.perform(post("/api/applications/" + APP_ID + "/chat").with(user())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"message\":\"  \"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void savesManuallyEditedParagraphs() throws Exception {
+        when(applicationService.updateParagraphs(USER_ID, APP_ID, List.of("Eins", "Zwei")))
+                .thenReturn(detail(ApplicationStatus.DRAFT));
+
+        mvc.perform(put("/api/applications/" + APP_ID + "/paragraphs").with(user())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"paragraphs\":[\"Eins\",\"Zwei\"]}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void rejectsEmptyParagraphs() throws Exception {
+        mvc.perform(put("/api/applications/" + APP_ID + "/paragraphs").with(user())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"paragraphs\":[\"Eins\",\" \"]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Absätze dürfen nicht leer sein."));
+        mvc.perform(put("/api/applications/" + APP_ID + "/paragraphs").with(user())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"paragraphs\":[]}"))
                 .andExpect(status().isBadRequest());
     }
 

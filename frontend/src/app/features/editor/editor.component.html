@@ -40,6 +40,10 @@
           [meta]="app.letter"
           [paragraphs]="paragraphs()"
           [highlighted]="visibleHighlights()"
+          [editable]="!isOldVersion()"
+          [busy]="typing() || saving()"
+          (paragraphSave)="saveParagraph($event.index, $event.text)"
+          (paragraphDelete)="deleteParagraph($event)"
         />
       </div>
 

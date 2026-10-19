@@ -50,6 +50,53 @@ describe('shared components', () => {
       expect(text(el.querySelector('.custom'))).toContain('Führerschein: Klasse B');
     });
 
+    it('lets the user edit and delete paragraphs when editable', async () => {
+      const fixture = TestBed.createComponent(LetterSheetComponent);
+      fixture.componentRef.setInput('paragraphs', ['Eins', 'Zwei']);
+      fixture.componentRef.setInput('editable', true);
+      const saved: { index: number; text: string }[] = [];
+      const deleted: number[] = [];
+      fixture.componentInstance.paragraphSave.subscribe((e) => saved.push(e));
+      fixture.componentInstance.paragraphDelete.subscribe((i) => deleted.push(i));
+      await fixture.whenStable();
+      const el: HTMLElement = fixture.nativeElement;
+
+      (el.querySelectorAll('.paragraph-tools .danger')[1] as HTMLButtonElement).click();
+      expect(deleted).toEqual([1]);
+
+      (el.querySelectorAll('.paragraph-tools .tool')[0] as HTMLButtonElement).click();
+      await fixture.whenStable();
+      const area = el.querySelector('.edit-area') as HTMLTextAreaElement;
+      area.value = 'Eins neu';
+      area.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+      (el.querySelector('.edit-save') as HTMLButtonElement).click();
+      expect(saved).toEqual([{ index: 0, text: 'Eins neu' }]);
+    });
+
+    it('cancels editing with escape and hides tools when not editable', async () => {
+      const fixture = TestBed.createComponent(LetterSheetComponent);
+      fixture.componentRef.setInput('paragraphs', ['Eins']);
+      fixture.componentRef.setInput('editable', true);
+      await fixture.whenStable();
+      const el: HTMLElement = fixture.nativeElement;
+      expect(
+        (el.querySelector('.paragraph-tools .danger') as HTMLButtonElement).disabled,
+      ).toBeTrue();
+
+      (el.querySelector('.paragraph-tools .tool') as HTMLButtonElement).click();
+      await fixture.whenStable();
+      el.querySelector('.edit-area')?.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape' }),
+      );
+      await fixture.whenStable();
+      expect(el.querySelector('.edit-area')).toBeNull();
+
+      fixture.componentRef.setInput('editable', false);
+      await fixture.whenStable();
+      expect(el.querySelector('.paragraph-tools')).toBeNull();
+    });
+
     it('renders the modern letterhead with placeholders in preview mode', async () => {
       const fixture = TestBed.createComponent(LetterSheetComponent);
       fixture.componentRef.setInput('profile', profileFixture());
