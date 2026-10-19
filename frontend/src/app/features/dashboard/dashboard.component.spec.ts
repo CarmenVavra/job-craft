@@ -63,6 +63,6 @@ describe('DashboardComponent', () => {
     expect(req.request.body).toEqual({ status: 'SENT' });
     req.flush({});
     await fixture.whenStable();
-    expect(text(el.querySelector('.status-pill'))).toBe('Versendet');
+    expect(text(el.querySelector('.status-pill'))).toBe('Versendet ▾');
   });
 });

@@ -101,7 +101,7 @@
             (click)="toggleStatusMenu($event, app.id)"
             (keydown.enter)="$event.stopPropagation()"
           >
-            {{ statusLabels[app.status] }}
+            {{ statusLabels[app.status] }} <span class="caret" aria-hidden="true">▾</span>
           </button>
           @if (statusMenuFor() === app.id) {
             <div class="status-menu" role="menu">
