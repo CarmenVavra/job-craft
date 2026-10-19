@@ -33,6 +33,10 @@ import org.thymeleaf.context.Context;
 public class PdfGenerationService {
 
     private static final Duration RENDER_TIMEOUT = Duration.ofSeconds(60);
+    /** Fußzeile mehrseitiger Briefe (Chromium füllt pageNumber/totalPages). */
+    private static final String PAGE_FOOTER = "<div style=\"width:100%;font-family:Arial,sans-serif;font-size:8px;"
+            + "color:#6B6A62;text-align:right;padding:0 20mm 0 25mm;\">Seite <span class=\"pageNumber\"></span> "
+            + "von <span class=\"totalPages\"></span></div>";
 
     private final TemplateEngine templateEngine;
     private final BrowserManager browserManager;
@@ -87,14 +91,38 @@ public class PdfGenerationService {
                 } catch (com.microsoft.playwright.TimeoutError e) {
                     // Webfonts nicht erreichbar (offline) – die Systemschriften genügen als Fallback.
                 }
-                return page.pdf(new Page.PdfOptions()
-                        .setFormat("A4")
-                        .setPrintBackground(true)
-                        .setPreferCSSPageSize(true)
-                        .setMargin(new Margin().setTop("0").setBottom("0").setLeft("0").setRight("0")));
+                byte[] pdf = page.pdf(pdfOptions(false));
+                // Mehrseitige Briefe erhalten nach DIN 5008 eine Seitenangabe („Seite 1 von 2“).
+                return pageCount(pdf) > 1 ? page.pdf(pdfOptions(true)) : pdf;
             }
         }, RENDER_TIMEOUT);
         return attachments.isEmpty() ? letter : merge(letter, attachments);
+    }
+
+    private static Page.PdfOptions pdfOptions(boolean pageNumbers) {
+        Page.PdfOptions options = new Page.PdfOptions()
+                .setFormat("A4")
+                .setPrintBackground(true)
+                .setPreferCSSPageSize(true)
+                .setMargin(new Margin().setTop("0").setBottom("0").setLeft("0").setRight("0"));
+        if (pageNumbers) {
+            options.setDisplayHeaderFooter(true)
+                    .setHeaderTemplate("<span></span>")
+                    .setFooterTemplate(PAGE_FOOTER);
+        }
+        return options;
+    }
+
+    /**
+     * @param pdf PDF-Bytes
+     * @return Seitenzahl
+     */
+    static int pageCount(byte[] pdf) {
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            return document.getNumberOfPages();
+        } catch (IOException e) {
+            throw new ExternalServiceException("Das PDF konnte nicht gelesen werden.", e);
+        }
     }
 
     private static byte[] merge(byte[] letter, List<byte[]> attachments) {
