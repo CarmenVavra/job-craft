@@ -1,0 +1,41 @@
+<div class="jc-dialog preview" role="document">
+  <div class="head">
+    <div class="titles">
+      <h2 id="preview-title">{{ document.fileName }}</h2>
+      <p>
+        {{ categoryLabels[document.category] }} · {{ formatSize(document.sizeBytes) }} · hochgeladen
+        am
+        {{ formatDate(document.createdAt) }}
+      </p>
+    </div>
+    <button type="button" class="jc-dialog-close" aria-label="Schließen" (click)="close()">
+      ×
+    </button>
+  </div>
+  <div class="grid">
+    <div class="page">
+      @if (pageUrl(); as url) {
+        <img [src]="url" alt="Erste Seite von {{ document.fileName }}" />
+      } @else {
+        <span>dokument-vorschau</span>
+      }
+    </div>
+    <div class="text-col">
+      <span class="jc-label">Extrahierter Text</span>
+      <div class="text">
+        @if (error()) {
+          {{ error() }}
+        } @else if (detail(); as d) {
+          {{
+            d.extractedText ||
+              (d.status === 'PROCESSING'
+                ? 'Text wird gerade extrahiert …'
+                : 'Aus diesem Dokument konnte kein Text extrahiert werden.')
+          }}
+        } @else {
+          Wird geladen …
+        }
+      </div>
+    </div>
+  </div>
+</div>

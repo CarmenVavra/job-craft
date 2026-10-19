@@ -1,0 +1,176 @@
+:host {
+  display: block;
+  background: #fff;
+  font-family: var(--jc-serif);
+  color: var(--jc-ink);
+}
+
+/* ---------- A4-Blatt im Editor (595 × 842 px) ---------- */
+:host(.page) {
+  width: 595px;
+  max-width: 100%;
+  min-height: 842px;
+  box-shadow: var(--jc-paper-shadow);
+  padding: 56px 64px 64px;
+  font-size: 12.5px;
+  line-height: 1.62;
+  flex: none;
+  overflow: hidden;
+
+  --pad-top: 56px;
+  --pad-x: 64px;
+  --name-size: 25px;
+  --modern-name-size: 24px;
+  --head-gap: 30px;
+}
+
+/* ---------- Briefkopf-Vorschau ---------- */
+:host(.preview) {
+  padding: 44px 48px;
+  font-size: 12px;
+  line-height: 1.6;
+
+  --pad-top: 44px;
+  --pad-x: 48px;
+  --name-size: 23px;
+  --modern-name-size: 22px;
+  --head-gap: 26px;
+}
+
+.head-classic {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  border-bottom: 1.5px solid var(--jc-ink);
+  padding-bottom: 14px;
+  margin-bottom: var(--head-gap);
+
+  .name {
+    font-size: var(--name-size);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+
+  .contact {
+    color: var(--jc-label);
+  }
+}
+
+.head-modern {
+  margin: calc(var(--pad-top) * -1) calc(var(--pad-x) * -1) var(--head-gap);
+  padding: 30px var(--pad-x) 22px;
+  background: var(--jc-teal);
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  font-family: var(--jc-font);
+
+  .name {
+    font-size: var(--modern-name-size);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+  }
+
+  .address {
+    font-size: 10px;
+    margin-top: 5px;
+    opacity: 0.95;
+  }
+}
+
+.contact {
+  text-align: right;
+  font-family: var(--jc-font);
+  font-size: 9.5px;
+  line-height: 1.6;
+}
+
+.sender-line {
+  font-family: var(--jc-font);
+  font-size: 8.5px;
+  color: var(--jc-text-2);
+  border-bottom: 0.5px solid var(--jc-placeholder);
+  display: inline-block;
+  padding-bottom: 1px;
+  margin-bottom: 8px;
+}
+
+.recipient-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.recipient {
+  display: flex;
+  flex-direction: column;
+}
+
+.date {
+  white-space: nowrap;
+}
+
+.custom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-family: var(--jc-font);
+  font-size: 10px;
+  color: var(--jc-label);
+
+  b {
+    font-weight: 600;
+  }
+}
+
+:host(.page) .custom {
+  margin: -18px 0 22px;
+}
+
+.subject {
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+p {
+  margin: 0 0 10px;
+}
+
+.paragraph {
+  margin: 0 -6px 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.8s;
+  text-wrap: pretty;
+
+  &.changed {
+    background: var(--jc-teal-highlight);
+  }
+}
+
+.closing {
+  margin: 18px 0 34px;
+}
+
+.signature {
+  margin: 0;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  color: var(--jc-placeholder);
+}
+
+.preview-date {
+  text-align: right;
+  margin-top: 6px;
+}

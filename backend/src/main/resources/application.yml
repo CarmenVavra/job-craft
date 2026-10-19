@@ -1,0 +1,76 @@
+server:
+  port: ${JOBCRAFT_PORT:8090}
+  error:
+    include-stacktrace: never
+    include-message: never
+
+spring:
+  application:
+    name: jobcraft
+  profiles:
+    default: dev
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+  flyway:
+    locations: classpath:db/migration/{vendor}
+  thymeleaf:
+    check-template-location: false
+
+jobcraft:
+  jwt:
+    # In Produktion zwingend über JOBCRAFT_JWT_SECRET setzen (mind. 32 Zeichen).
+    secret: ${JOBCRAFT_JWT_SECRET:dev-only-secret-change-me-please-0123456789abcdef}
+    expiration: PT8H
+  cors:
+    allowed-origins: ${JOBCRAFT_CORS_ORIGINS:http://localhost:4300}
+  ai:
+    # Ohne API-Key arbeitet JobCraft im Demo-Modus (regelbasierte Texte).
+    api-key: ${ANTHROPIC_API_KEY:}
+    model: ${JOBCRAFT_AI_MODEL:claude-opus-5-5}
+    max-tokens: 16000
+  storage:
+    type: ${JOBCRAFT_STORAGE:local}
+    local-path: ${JOBCRAFT_STORAGE_PATH:./data/uploads}
+    s3:
+      endpoint: ${JOBCRAFT_S3_ENDPOINT:http://localhost:9000}
+      region: ${JOBCRAFT_S3_REGION:eu-central-1}
+      bucket: ${JOBCRAFT_S3_BUCKET:jobcraft-documents}
+      access-key: ${JOBCRAFT_S3_ACCESS_KEY:}
+      secret-key: ${JOBCRAFT_S3_SECRET_KEY:}
+      path-style-access: true
+  scraper:
+    use-browser: ${JOBCRAFT_SCRAPER_BROWSER:true}
+    timeout: PT25S
+    # Liefert für die Beispiel-URL aus dem UI eine eingebaute Demo-Stellenanzeige.
+    demo-enabled: true
+  pdf:
+    warm-up: ${JOBCRAFT_PDF_WARMUP:true}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:file:./data/jobcraft;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;AUTO_SERVER=TRUE
+    username: sa
+    password:
+
+---
+spring:
+  config:
+    activate:
+      on-profile: postgres
+  datasource:
+    url: ${JOBCRAFT_DB_URL:jdbc:postgresql://localhost:5432/jobcraft}
+    username: ${JOBCRAFT_DB_USER:jobcraft}
+    password: ${JOBCRAFT_DB_PASSWORD:jobcraft}

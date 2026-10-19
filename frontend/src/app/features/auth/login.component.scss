@@ -1,0 +1,163 @@
+.login {
+  display: flex;
+  min-height: 100vh;
+  flex-wrap: wrap;
+}
+
+.brand {
+  flex: 1 1 440px;
+  background: var(--jc-ink);
+  color: var(--jc-lavender);
+  padding: 44px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 48px;
+  min-width: 0;
+}
+
+.claim {
+  max-width: 460px;
+
+  h1 {
+    font-size: 46px;
+    line-height: 1.06;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    margin: 0 0 20px;
+    color: #fff;
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #c9c8d6;
+    margin: 0;
+    text-wrap: pretty;
+  }
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  border-top: 1px solid #4a4a42;
+  padding: 22px 0 0;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .num {
+    font: 600 12px var(--jc-mono);
+    color: var(--jc-teal);
+  }
+
+  .label {
+    font-size: 13px;
+    color: #e4e3ef;
+    line-height: 1.35;
+  }
+}
+
+.form-side {
+  flex: 1 1 480px;
+  display: grid;
+  place-items: center;
+  padding: 48px 24px;
+  min-width: 0;
+}
+
+.form {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+
+  h2 {
+    margin: 0 0 6px;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--jc-text-2);
+  font-size: 14px;
+}
+
+.tabs {
+  display: flex;
+  background: var(--jc-segment-track);
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+
+  button {
+    flex: 1;
+    border: none;
+    border-radius: 7px;
+    padding: 9px 0;
+    font: 600 14px var(--jc-font);
+    cursor: pointer;
+    background: transparent;
+    color: var(--jc-text-2);
+
+    &.active {
+      background: #fff;
+      color: var(--jc-ink);
+      box-shadow: var(--jc-segment-shadow);
+    }
+  }
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.password-label {
+  display: flex;
+  justify-content: space-between;
+}
+
+.forgot {
+  border: none;
+  background: none;
+  padding: 0;
+  font: 500 12.5px var(--jc-font);
+  color: var(--jc-teal-text);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--jc-red);
+  }
+}
+
+.submit {
+  margin-top: 4px;
+  padding: 13px 18px;
+  font-size: 15px;
+}
+
+@media (max-width: 600px) {
+  .brand {
+    padding: 32px 24px;
+  }
+
+  .claim h1 {
+    font-size: 34px;
+  }
+
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

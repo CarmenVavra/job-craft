@@ -1,0 +1,63 @@
+@if (modern()) {
+  <div class="head-modern">
+    <div>
+      <div class="name">{{ name() }}</div>
+      <div class="address">{{ modernAddress() }}</div>
+    </div>
+    <div class="contact">
+      @for (line of contactLines(); track $index) {
+        <div>{{ line }}</div>
+      }
+    </div>
+  </div>
+} @else {
+  <div class="head-classic">
+    <div class="name">{{ name() }}</div>
+    <div class="contact">
+      @for (line of contactLines(); track $index) {
+        <div>{{ line }}</div>
+      }
+    </div>
+  </div>
+}
+
+<div class="sender-line">{{ senderLine() }}</div>
+
+@if (variant() === 'page') {
+  <div class="recipient-row">
+    <div class="recipient">
+      @for (line of meta()?.recipientLines ?? []; track $index) {
+        <span>{{ line }}</span>
+      }
+    </div>
+    <span class="date">{{ date() }}</span>
+  </div>
+  @if (customFields().length > 0) {
+    <div class="custom">
+      @for (field of customFields(); track $index) {
+        <span
+          ><b>{{ field.label }}:</b> {{ field.value }}</span
+        >
+      }
+    </div>
+  }
+  <div class="subject">{{ meta()?.subject }}</div>
+  <p class="salutation">{{ meta()?.salutation }}</p>
+  @for (paragraph of paragraphs(); track $index) {
+    <p class="paragraph" [class.changed]="isHighlighted($index)">{{ paragraph }}</p>
+  }
+  <p class="closing">{{ meta()?.closing ?? 'Mit freundlichen Grüßen' }}</p>
+  <p class="signature">{{ name() }}</p>
+} @else {
+  <div class="placeholder">
+    <span>Unternehmen</span><span>Ansprechpartner</span><span>Straße</span><span>PLZ Ort</span>
+  </div>
+  <div class="custom">
+    @for (field of customFields(); track $index) {
+      <span
+        ><b>{{ field.label }}:</b> {{ field.value }}</span
+      >
+    }
+  </div>
+  <div class="preview-date">{{ date() }}</div>
+}

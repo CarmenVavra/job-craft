@@ -1,0 +1,388 @@
+/* JobCraft – globale Design-Tokens und wiederverwendbare UI-Bausteine (siehe design_handoff_jobcraft/README.md). */
+@use '@angular/cdk/overlay-prebuilt.css';
+
+:root {
+  --jc-teal: #31a2ac;
+  --jc-teal-hover: #2a8f98;
+  --jc-teal-text: #217a82;
+  --jc-teal-dark: #1e6e75;
+  --jc-teal-tint: #dceff1;
+  --jc-teal-highlight: #d6eef0;
+  --jc-teal-light: #7fd0d6;
+  --jc-red: #af1c1c;
+  --jc-red-hover: #961616;
+  --jc-red-tint: #f8e4e4;
+  --jc-lavender: #f0effe;
+  --jc-lavender-tint: #e4e2fa;
+  --jc-segment-track: #e4e2f6;
+  --jc-ink: #2f2f28;
+  --jc-ink-soft: #3e3e37;
+  --jc-border: #e2e0f2;
+  --jc-border-input: #d9d7ec;
+  --jc-border-light: #eceaf8;
+  --jc-row-border: #f0eff8;
+  --jc-row-hover: #f7f6ff;
+  --jc-row-hover-light: #fafaff;
+  --jc-text-2: #6b6a62;
+  --jc-label: #55544c;
+  --jc-text-3: #8a8996;
+  --jc-placeholder: #9a99a8;
+  --jc-sidebar-active: #45453d;
+  --jc-sidebar-text: #bdbcca;
+  --jc-checkbox-border: #cfcde3;
+  --jc-font: 'DM Sans', system-ui, sans-serif;
+  --jc-serif: 'Source Serif 4', Georgia, serif;
+  --jc-mono: ui-monospace, Menlo, Consolas, monospace;
+  --jc-focus-ring: 0 0 0 3px rgba(49, 162, 172, 0.18);
+  --jc-paper-shadow: 0 1px 2px rgba(47, 47, 40, 0.06), 0 14px 36px rgba(47, 47, 40, 0.1);
+  --jc-segment-shadow: 0 1px 3px rgba(47, 47, 40, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--jc-lavender);
+  color: var(--jc-ink);
+  font-family: var(--jc-font);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  line-height: 1.3;
+  white-space: nowrap;
+  font-family: var(--jc-font);
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+}
+
+a {
+  color: var(--jc-teal-text);
+}
+
+a:hover {
+  color: var(--jc-red);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--jc-placeholder);
+}
+
+:focus-visible {
+  outline: 2px solid var(--jc-teal);
+  outline-offset: 2px;
+}
+
+@keyframes jc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes jc-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@keyframes jc-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Seitenrahmen ---------- */
+.jc-page {
+  padding: 36px 44px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.jc-page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0 0 6px;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 0;
+    color: var(--jc-text-2);
+    font-size: 14.5px;
+  }
+}
+
+.jc-card {
+  background: #fff;
+  border: 1px solid var(--jc-border);
+  border-radius: 16px;
+}
+
+/* ---------- Formulare ---------- */
+.jc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jc-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--jc-label);
+}
+
+.jc-input {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--jc-border-input);
+  border-radius: 9px;
+  font: 14px var(--jc-font);
+  color: var(--jc-ink);
+  background: #fff;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+
+  &:focus {
+    border-color: var(--jc-teal);
+    box-shadow: var(--jc-focus-ring);
+  }
+
+  &.jc-input-lg {
+    padding: 12px 13px;
+    font-size: 15px;
+  }
+}
+
+.jc-error-box {
+  font-size: 13px;
+  color: var(--jc-red);
+  background: var(--jc-red-tint);
+  border-radius: 8px;
+  padding: 9px 12px;
+}
+
+.jc-info-box {
+  font-size: 13px;
+  color: var(--jc-teal-dark);
+  background: var(--jc-teal-tint);
+  border-radius: 8px;
+  padding: 9px 12px;
+}
+
+/* ---------- Buttons ---------- */
+.jc-btn {
+  border: none;
+  border-radius: 9px;
+  padding: 11px 20px;
+  font: 600 14px var(--jc-font);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+.jc-btn-primary {
+  background: var(--jc-teal);
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: var(--jc-teal-hover);
+  }
+}
+
+.jc-btn-danger {
+  background: var(--jc-red);
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: var(--jc-red-hover);
+  }
+}
+
+.jc-btn-secondary {
+  background: #fff;
+  color: var(--jc-ink);
+  border: 1px solid var(--jc-border-input);
+  border-radius: 8px;
+  padding: 7px 11px;
+  font: 500 13px var(--jc-font);
+
+  &:hover:not(:disabled) {
+    border-color: var(--jc-ink);
+  }
+}
+
+.jc-btn-small {
+  border: 1px solid var(--jc-border-input);
+  background: #fff;
+  border-radius: 7px;
+  padding: 6px 11px;
+  font: 500 12.5px var(--jc-font);
+  color: var(--jc-ink);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--jc-ink);
+  }
+}
+
+.jc-btn-link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--jc-teal-text);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.jc-btn-ghost-danger {
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 7px;
+  padding: 6px 10px;
+  font: 500 12.5px var(--jc-font);
+  cursor: pointer;
+  color: var(--jc-red);
+
+  &:hover {
+    background: var(--jc-red-tint);
+  }
+}
+
+/* ---------- Segmented Control ---------- */
+.jc-segmented {
+  display: flex;
+  background: var(--jc-lavender);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 3px;
+
+  button {
+    flex: 1;
+    border: none;
+    border-radius: 7px;
+    padding: 8px 0;
+    font: 600 13px var(--jc-font);
+    cursor: pointer;
+    background: transparent;
+    color: var(--jc-text-2);
+
+    &.active {
+      background: #fff;
+      color: var(--jc-ink);
+      box-shadow: var(--jc-segment-shadow);
+    }
+  }
+}
+
+/* ---------- Pills ---------- */
+.jc-pill {
+  display: inline-block;
+  justify-self: start;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* ---------- Spinner & Tippanzeige ---------- */
+.jc-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #cfe9eb;
+  border-top-color: var(--jc-teal);
+  border-radius: 50%;
+  display: inline-block;
+  animation: jc-spin 0.8s linear infinite;
+  flex: none;
+}
+
+/* ---------- Dialoge (CDK Dialog) ---------- */
+.jc-dialog-backdrop {
+  background: rgba(47, 47, 40, 0.55);
+}
+
+.jc-dialog-panel {
+  width: calc(100% - 48px);
+  animation: jc-in 0.2s ease-out;
+}
+
+.jc-dialog {
+  background: #fff;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+}
+
+.jc-dialog-close {
+  border: none;
+  background: var(--jc-lavender);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--jc-ink);
+  flex: none;
+}
+
+.jc-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* ---------- Responsiv ---------- */
+@media (max-width: 900px) {
+  .jc-page {
+    padding: 24px 18px 40px;
+  }
+}

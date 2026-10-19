@@ -1,0 +1,114 @@
+<div class="jc-page documents">
+  <header class="jc-page-head">
+    <div>
+      <h1>Dokumente</h1>
+      <p>Lebenslauf, Skill-Profile und Zeugnisse. Der extrahierte Text dient der KI als Kontext.</p>
+    </div>
+  </header>
+
+  <label
+    class="dropzone"
+    [class.dragging]="dragging()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="dragging.set(false)"
+    (drop)="onDrop($event)"
+  >
+    <input
+      #fileInput
+      class="jc-sr-only"
+      type="file"
+      multiple
+      accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      (change)="onFiles(fileInput)"
+    />
+    <span class="plus" aria-hidden="true">+</span>
+    <span class="drop-text">
+      <span class="drop-title">Dateien hierher ziehen oder klicken</span>
+      <span class="drop-hint">PDF oder DOCX · max. 10 MB · Kategorie wird automatisch erkannt</span>
+    </span>
+  </label>
+  @if (uploadError()) {
+    <div class="jc-error-box" role="alert">{{ uploadError() }}</div>
+  }
+
+  <div class="filters" role="group" aria-label="Nach Kategorie filtern">
+    @for (f of filters(); track f.id) {
+      <button
+        type="button"
+        class="filter"
+        [class.active]="filter() === f.id"
+        [attr.aria-pressed]="filter() === f.id"
+        (click)="filter.set(f.id)"
+      >
+        {{ f.label }} <span class="count">{{ f.count }}</span>
+      </button>
+    }
+  </div>
+
+  <div class="jc-card list">
+    @for (doc of visible(); track doc.id) {
+      <div class="row">
+        <span class="thumb" [class.pdf]="extension(doc) === 'PDF'" aria-hidden="true">{{
+          extension(doc)
+        }}</span>
+        <div class="info">
+          <div class="name">{{ doc.fileName }}</div>
+          <div class="meta">{{ meta(doc) }}</div>
+        </div>
+        <div class="category">
+          <button
+            type="button"
+            class="jc-pill cat-pill"
+            title="Kategorie ändern"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="categoryMenuFor() === doc.id"
+            [style.background]="categoryColors[doc.category].bg"
+            [style.color]="categoryColors[doc.category].fg"
+            (click)="toggleCategoryMenu($event, doc.id)"
+          >
+            {{ categoryLabels[doc.category] }} ▾
+          </button>
+          @if (categoryMenuFor() === doc.id) {
+            <div class="menu" role="menu">
+              @for (c of categories; track c) {
+                <button
+                  type="button"
+                  role="menuitem"
+                  [class.current]="c === doc.category"
+                  (click)="setCategory($event, doc, c)"
+                >
+                  {{ categoryLabels[c] }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+        <span class="status" [class.processing]="doc.status === 'PROCESSING'">
+          @switch (doc.status) {
+            @case ('PROCESSING') {
+              <span class="jc-spinner"></span>Wird verarbeitet …
+            }
+            @case ('READY') {
+              <span class="ready-dot"></span>Text extrahiert
+            }
+            @case ('FAILED') {
+              <span class="failed-dot"></span>Kein Text erkannt
+            }
+          }
+        </span>
+        <div class="actions">
+          <button type="button" class="jc-btn-small" (click)="preview(doc)">Vorschau</button>
+          <button type="button" class="jc-btn-ghost-danger" (click)="remove(doc)">Löschen</button>
+        </div>
+      </div>
+    } @empty {
+      <div class="empty">
+        {{
+          documents().length === 0
+            ? 'Noch keine Dokumente hochgeladen.'
+            : 'Keine Dokumente in dieser Kategorie.'
+        }}
+      </div>
+    }
+  </div>
+</div>

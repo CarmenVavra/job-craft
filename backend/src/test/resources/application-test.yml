@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:jobcraft-test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+
+jobcraft:
+  ai:
+    api-key: ""
+  storage:
+    type: local
+    local-path: ./target/test-uploads
+  scraper:
+    use-browser: false
+  pdf:
+    warm-up: false

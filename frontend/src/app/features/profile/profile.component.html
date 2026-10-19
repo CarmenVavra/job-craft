@@ -1,0 +1,167 @@
+<div class="jc-page profile">
+  <header class="jc-page-head">
+    <div>
+      <h1>Briefkopf &amp; Stammdaten</h1>
+      <p>Diese Angaben erscheinen auf jedem Anschreiben.</p>
+    </div>
+    <button type="button" class="jc-btn jc-btn-primary" [disabled]="saving()" (click)="save()">
+      {{ saving() ? 'Speichert …' : 'Speichern' }}
+    </button>
+  </header>
+  @if (error()) {
+    <div class="jc-error-box" role="alert">{{ error() }}</div>
+  }
+
+  <div class="grid">
+    <div class="left">
+      <section class="jc-card card">
+        <h3>Persönliche Daten</h3>
+        <div class="fields">
+          @for (f of fields; track f.key) {
+            <label class="jc-field" [class.wide]="f.wide">
+              <span class="jc-label">{{ f.label }}</span>
+              <input
+                class="jc-input"
+                [type]="f.type"
+                [attr.name]="f.key"
+                [ngModel]="value(f.key)"
+                (ngModelChange)="update(f.key, $event)"
+              />
+            </label>
+          }
+        </div>
+      </section>
+
+      <section class="jc-card card">
+        <div class="card-head">
+          <h3>Eigene Felder</h3>
+          <button type="button" class="jc-btn-small add" (click)="addCustom()">
+            + Feld hinzufügen
+          </button>
+        </div>
+        @for (c of customFields(); track $index) {
+          <div class="custom-row">
+            <input
+              class="custom-label"
+              placeholder="Bezeichnung"
+              aria-label="Bezeichnung"
+              [ngModel]="c.label"
+              (ngModelChange)="updateCustom($index, 'label', $event)"
+            />
+            <input
+              class="custom-value"
+              placeholder="Wert"
+              aria-label="Wert"
+              [ngModel]="c.value"
+              (ngModelChange)="updateCustom($index, 'value', $event)"
+            />
+            <button type="button" class="remove" (click)="removeCustom($index)">Entfernen</button>
+          </div>
+        } @empty {
+          <p class="muted">z. B. Führerschein, Verfügbarkeit, Gehaltsvorstellung</p>
+        }
+      </section>
+
+      <section class="jc-card card logo-card">
+        <div class="logo-placeholder" aria-hidden="true">logo</div>
+        <div class="logo-text">
+          <span class="logo-title">Logo / Signet (optional)</span>
+          <span class="muted">PNG oder SVG, quadratisch, min. 256 px</span>
+          <button
+            type="button"
+            class="jc-btn-small"
+            disabled
+            title="Folgt in einer späteren Version"
+          >
+            Datei wählen
+          </button>
+        </div>
+      </section>
+
+      <section class="jc-card card">
+        <h3>Passwort ändern</h3>
+        <form class="password-form" (ngSubmit)="changePassword()" novalidate>
+          <input
+            type="text"
+            name="username"
+            autocomplete="username"
+            class="jc-sr-only"
+            tabindex="-1"
+            aria-hidden="true"
+            [value]="value('email')"
+          />
+          <label class="jc-field wide">
+            <span class="jc-label">Aktuelles Passwort</span>
+            <input
+              class="jc-input"
+              type="password"
+              name="currentPassword"
+              autocomplete="current-password"
+              [ngModel]="currentPassword()"
+              (ngModelChange)="currentPassword.set($event)"
+            />
+          </label>
+          <label class="jc-field">
+            <span class="jc-label">Neues Passwort</span>
+            <input
+              class="jc-input"
+              type="password"
+              name="newPassword"
+              autocomplete="new-password"
+              placeholder="Mindestens 8 Zeichen"
+              [ngModel]="newPassword()"
+              (ngModelChange)="newPassword.set($event)"
+            />
+          </label>
+          <label class="jc-field">
+            <span class="jc-label">Neues Passwort wiederholen</span>
+            <input
+              class="jc-input"
+              type="password"
+              name="confirmPassword"
+              autocomplete="new-password"
+              [ngModel]="confirmPassword()"
+              (ngModelChange)="confirmPassword.set($event)"
+            />
+          </label>
+          @if (passwordError()) {
+            <div class="jc-error-box wide" role="alert">{{ passwordError() }}</div>
+          }
+          <div class="wide">
+            <button type="submit" class="jc-btn-small" [disabled]="changingPassword()">
+              {{ changingPassword() ? 'Wird geändert …' : 'Passwort ändern' }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="right">
+      <div class="preview-head">
+        <span class="jc-label">Live-Vorschau</span>
+        <div class="style-tabs" role="radiogroup" aria-label="Briefkopf-Vorlage">
+          @for (o of styleOptions; track o.value) {
+            <button
+              type="button"
+              role="radio"
+              [attr.aria-checked]="letterStyle() === o.value"
+              [class.active]="letterStyle() === o.value"
+              (click)="letterStyle.set(o.value)"
+            >
+              {{ o.label }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="preview-frame">
+        <app-letter-sheet
+          variant="preview"
+          [profile]="previewProfile()"
+          [letterStyle]="letterStyle()"
+          [dateLine]="dateLine()"
+        />
+        <div class="fade" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+</div>

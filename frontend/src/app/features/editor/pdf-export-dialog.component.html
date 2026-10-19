@@ -1,0 +1,86 @@
+<div class="jc-dialog pdf" role="document">
+  <div class="head">
+    <div>
+      <h2 id="pdf-title">Als PDF exportieren</h2>
+      <p>v{{ data.version }} · {{ data.company }}</p>
+    </div>
+    <button type="button" class="jc-dialog-close" aria-label="Schließen" (click)="close()">
+      ×
+    </button>
+  </div>
+
+  <div class="section">
+    <span class="jc-label">Vorlage</span>
+    <div class="templates" role="radiogroup" aria-label="Vorlage">
+      @for (s of styles; track s.value) {
+        <button
+          type="button"
+          class="template"
+          role="radio"
+          [attr.aria-checked]="data.letterStyle() === s.value"
+          [class.active]="data.letterStyle() === s.value"
+          (click)="selectStyle(s.value)"
+        >
+          <span class="mini" [class.modern]="s.value === 'MODERN'">
+            <span class="band"></span>
+            <span class="bar name"></span>
+            <span class="bar sub"></span>
+            <span class="bar line first"></span>
+            <span class="bar line w85"></span>
+            <span class="bar line w88"></span>
+          </span>
+          <span class="template-label">{{ s.label }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="section attachments">
+    <span class="jc-label">Anhänge</span>
+    <button
+      type="button"
+      class="toggle-row"
+      role="switch"
+      [attr.aria-checked]="attachCv()"
+      (click)="toggle('cv')"
+    >
+      <span>Lebenslauf anhängen</span>
+      <span class="switch" [class.on]="attachCv()"><span class="knob"></span></span>
+    </button>
+    <button
+      type="button"
+      class="toggle-row"
+      role="switch"
+      [attr.aria-checked]="attachCerts()"
+      (click)="toggle('certs')"
+    >
+      <span>Zeugnisse anhängen</span>
+      <span class="switch" [class.on]="attachCerts()"><span class="knob"></span></span>
+    </button>
+  </div>
+
+  <div class="filename">{{ fileName() }}</div>
+
+  @if (error()) {
+    <div class="jc-error-box" role="alert">{{ error() }}</div>
+  }
+
+  @switch (state()) {
+    @case ('idle') {
+      <button type="button" class="jc-btn jc-btn-danger cta" (click)="download()">
+        PDF erzeugen &amp; herunterladen
+      </button>
+    }
+    @case ('gen') {
+      <div class="generating" role="status">
+        <span class="jc-spinner"></span> PDF wird gerendert …
+      </div>
+    }
+    @case ('done') {
+      <div class="done" role="status">
+        <span>✓ PDF bereit · {{ size() }}</span>
+        <button type="button" class="close-link" (click)="close()">Schließen</button>
+      </div>
+    }
+  }
+</div>

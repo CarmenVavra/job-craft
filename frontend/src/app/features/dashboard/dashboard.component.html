@@ -1,0 +1,139 @@
+<div class="jc-page dashboard">
+  <header class="jc-page-head">
+    <div>
+      <h1>Guten Tag, {{ firstName() }}</h1>
+      <p>{{ subtitle() }}</p>
+    </div>
+  </header>
+
+  <div class="top-grid">
+    <form class="new-card" (ngSubmit)="analyze()" novalidate>
+      <div>
+        <div class="eyebrow">NEUE BEWERBUNG</div>
+        <h2>Link zur Stellenanzeige einfügen</h2>
+      </div>
+      <div class="url-row">
+        <input
+          class="url-input"
+          name="url"
+          type="url"
+          aria-label="Link zur Stellenanzeige"
+          placeholder="https://karriere.unternehmen.de/jobs/…"
+          [ngModel]="url()"
+          (ngModelChange)="onUrlChange($event)"
+        />
+        <button type="submit" class="jc-btn jc-btn-primary analyze">Analysieren</button>
+      </div>
+      <div class="hint-row">
+        <span>JobCraft extrahiert Unternehmen, Ansprechpartner und Anforderungen.</span>
+        <button type="button" class="sample" (click)="useSample()">Beispiel-Link verwenden</button>
+      </div>
+      @if (urlError()) {
+        <div class="url-error" role="alert">{{ urlError() }}</div>
+      }
+    </form>
+
+    <div class="status-cards">
+      <a class="status-card" routerLink="/briefkopf">
+        <div class="status-head">
+          <span class="status-title">Briefkopf</span>
+          <span class="status-value">{{ completeness().percent }} %</span>
+        </div>
+        <div
+          class="progress"
+          role="progressbar"
+          aria-label="Vollständigkeit des Briefkopfs"
+          [attr.aria-valuenow]="completeness().percent"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <div class="progress-fill" [style.width.%]="completeness().percent"></div>
+        </div>
+        <span class="status-hint">
+          {{
+            completeness().missing === 0
+              ? 'Alle Pflichtangaben vorhanden'
+              : completeness().missing + ' Angabe(n) fehlen noch'
+          }}
+        </span>
+      </a>
+      <a class="status-card" routerLink="/dokumente">
+        <div class="status-head">
+          <span class="status-title">Dokumente</span>
+          <span class="status-value">{{ documents().length }} Dateien</span>
+        </div>
+        <span class="status-hint">{{ docHint() }}</span>
+      </a>
+    </div>
+  </div>
+
+  <section class="jc-card table" aria-labelledby="apps-title">
+    <div class="table-head">
+      <h3 id="apps-title">Bewerbungen</h3>
+      <span>{{ applications().length }} gesamt</span>
+    </div>
+    <div class="row header" aria-hidden="true">
+      <span>Unternehmen / Position</span><span>Status</span><span>Erstellt</span><span>Version</span
+      ><span></span>
+    </div>
+    @for (app of applications(); track app.id) {
+      <div
+        class="row"
+        role="link"
+        tabindex="0"
+        [attr.aria-label]="'Bewerbung bei ' + (app.companyName ?? '') + ' öffnen'"
+        (click)="open(app)"
+        (keydown.enter)="open(app)"
+      >
+        <div class="company">
+          <div class="company-name">{{ app.companyName }}</div>
+          <div class="role">{{ app.jobTitle }}</div>
+        </div>
+        <div class="status-cell">
+          <button
+            type="button"
+            class="jc-pill status-pill"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="statusMenuFor() === app.id"
+            [title]="'Status ändern'"
+            [style.background]="statusColors[app.status].bg"
+            [style.color]="statusColors[app.status].fg"
+            (click)="toggleStatusMenu($event, app.id)"
+            (keydown.enter)="$event.stopPropagation()"
+          >
+            {{ statusLabels[app.status] }}
+          </button>
+          @if (statusMenuFor() === app.id) {
+            <div class="status-menu" role="menu">
+              @for (status of selectableStatuses; track status) {
+                <button
+                  type="button"
+                  role="menuitem"
+                  [class.current]="status === app.status"
+                  (click)="setStatus($event, app, status)"
+                  (keydown.enter)="$event.stopPropagation()"
+                >
+                  <span
+                    class="swatch"
+                    [style.background]="statusColors[status].bg"
+                    [style.borderColor]="statusColors[status].fg"
+                  ></span
+                  >{{ statusLabels[status] }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+        <span class="date">{{ formatDate(app.createdAt) }}</span>
+        <span class="version">v{{ app.latestVersion }}</span>
+        <span class="open">Öffnen →</span>
+      </div>
+    } @empty {
+      @if (loaded()) {
+        <div class="empty">
+          Noch keine Bewerbungen – füge oben den Link zu einer Stellenanzeige ein.
+        </div>
+      }
+    }
+  </section>
+</div>

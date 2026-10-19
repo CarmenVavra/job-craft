@@ -1,0 +1,102 @@
+@if (application(); as app) {
+  <div class="editor">
+    <header class="toolbar">
+      <button type="button" class="jc-btn-secondary" (click)="back()">← Übersicht</button>
+      <div class="title">
+        <div class="company">{{ app.companyName }}</div>
+        <div class="role">{{ app.jobTitle }}</div>
+      </div>
+      <div class="versions" role="group" aria-label="Versionen">
+        <span class="versions-label">Versionen</span>
+        @for (v of versions(); track v.version) {
+          <button
+            type="button"
+            class="version-chip"
+            [class.active]="$index === current()"
+            [attr.aria-pressed]="$index === current()"
+            (click)="showVersion($index)"
+          >
+            v{{ v.version }}
+          </button>
+        }
+      </div>
+      <button type="button" class="jc-btn jc-btn-danger export" (click)="openPdf()">
+        PDF exportieren
+      </button>
+    </header>
+
+    <div class="body">
+      <div class="paper-area">
+        @if (isOldVersion()) {
+          <div class="old-banner" role="status">
+            <span>Du siehst eine ältere Version (v{{ currentVersion()?.version }}).</span>
+            <button type="button" class="to-latest" (click)="toLatest()">Zur aktuellen →</button>
+          </div>
+        }
+        <app-letter-sheet
+          variant="page"
+          [profile]="profile()"
+          [letterStyle]="letterStyle()"
+          [meta]="app.letter"
+          [paragraphs]="paragraphs()"
+          [highlighted]="visibleHighlights()"
+        />
+      </div>
+
+      <aside class="chat" aria-label="KI-Assistent">
+        <div class="chat-head">
+          <span class="dot"></span>
+          <span class="chat-title">KI-Assistent</span>
+          <span class="chat-settings">
+            @if (demoMode()) {
+              <span class="demo" title="Kein ANTHROPIC_API_KEY konfiguriert">Demo ·</span>
+            }
+            {{ settingsLabel() }}
+          </span>
+        </div>
+        <div #chatList class="messages" aria-live="polite">
+          @for (b of bubbles(); track b.id) {
+            <div class="message" [class.user]="b.user">
+              <div class="bubble">{{ b.text }}</div>
+              @if (b.meta) {
+                <span class="meta">{{ b.meta }}</span>
+              }
+            </div>
+          }
+          @if (typing()) {
+            <div class="typing" aria-label="KI schreibt">
+              <span></span><span></span><span></span>
+            </div>
+          }
+        </div>
+        <div class="suggestions">
+          @for (s of suggestions(); track s) {
+            <button type="button" class="suggestion" [disabled]="typing()" (click)="send(s)">
+              {{ s }}
+            </button>
+          }
+        </div>
+        <div class="composer">
+          <textarea
+            rows="2"
+            aria-label="Nachricht an den KI-Assistenten"
+            placeholder="z. B. „Betone meine Erfahrung mit Kubernetes“"
+            [ngModel]="draft()"
+            (ngModelChange)="draft.set($event)"
+            (keydown)="onDraftKey($event)"
+          ></textarea>
+          <button
+            type="button"
+            class="jc-btn jc-btn-primary send"
+            [disabled]="typing() || !draft().trim()"
+            (click)="send()"
+          >
+            Senden
+          </button>
+        </div>
+      </aside>
+    </div>
+  </div>
+} @else {
+  <div class="loading"><span class="jc-spinner"></span> Anschreiben wird geladen …</div>
+}

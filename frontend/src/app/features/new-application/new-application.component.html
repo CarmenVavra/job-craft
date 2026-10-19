@@ -1,0 +1,239 @@
+<div class="jc-page new-app">
+  <ol class="stepper" aria-label="Fortschritt">
+    @for (s of stepper(); track $index) {
+      <li
+        [class.done]="s.done"
+        [class.active]="s.active"
+        [attr.aria-current]="s.active ? 'step' : null"
+      >
+        <span class="circle">{{ s.done ? '✓' : $index + 1 }}</span>
+        <span class="label">{{ s.label }}</span>
+        @if (!$last) {
+          <span class="connector" aria-hidden="true"></span>
+        }
+      </li>
+    }
+  </ol>
+
+  @switch (step()) {
+    @case (0) {
+      <form class="jc-card step-card" (ngSubmit)="analyze()" novalidate>
+        <div>
+          <h1>Welche Stelle reizt dich?</h1>
+          <p class="lead">
+            Füge den Link zur Stellenanzeige ein. Wir rufen die Seite ab und extrahieren die
+            Eckdaten für Briefkopf und Anschreiben.
+          </p>
+        </div>
+        <input
+          class="jc-input url-input"
+          name="url"
+          type="url"
+          aria-label="Link zur Stellenanzeige"
+          placeholder="https://karriere.unternehmen.de/jobs/…"
+          [ngModel]="jobUrl()"
+          (ngModelChange)="onUrlChange($event)"
+        />
+        @if (urlError()) {
+          <div class="url-error" role="alert">{{ urlError() }}</div>
+        }
+        <div class="actions">
+          <button type="button" class="jc-btn-link sample" (click)="useSample()">
+            Beispiel-Link verwenden
+          </button>
+          <button type="submit" class="jc-btn jc-btn-primary cta">
+            Stellenanzeige analysieren
+          </button>
+        </div>
+      </form>
+    }
+
+    @case (1) {
+      <section class="jc-card step-card analysis" aria-live="polite">
+        <div>
+          <h1 class="analysis-title">Stellenanzeige wird analysiert</h1>
+          <p class="mono-url">{{ jobUrl() }}</p>
+        </div>
+        <ul class="analysis-list">
+          @for (label of analysisSteps; track $index) {
+            <li [class.pending]="$index > shownStep()">
+              <span class="state">
+                @if ($index < shownStep()) {
+                  <span class="check">✓</span>
+                } @else if ($index === shownStep() && !analysisError()) {
+                  <span class="jc-spinner" aria-label="läuft"></span>
+                } @else if ($index === shownStep() && analysisError()) {
+                  <span class="failed">!</span>
+                } @else {
+                  <span class="open"></span>
+                }
+              </span>
+              <span class="analysis-label">{{ label }}</span>
+            </li>
+          }
+        </ul>
+        @if (analysisError()) {
+          <div class="jc-error-box" role="alert">{{ analysisError() }}</div>
+          <div class="actions">
+            <button type="button" class="jc-btn-link" (click)="restart()">
+              Andere Anzeige analysieren
+            </button>
+            <button type="button" class="jc-btn jc-btn-primary" (click)="analyze()">
+              Erneut versuchen
+            </button>
+          </div>
+        }
+      </section>
+    }
+
+    @case (2) {
+      <div class="review">
+        <section class="jc-card review-main">
+          <div class="review-head">
+            <div>
+              <h1>Eckdaten prüfen</h1>
+              <p>Aus der Anzeige extrahiert – alle Felder sind editierbar.</p>
+            </div>
+            <span class="jc-pill match">{{ matchLabel() }}</span>
+          </div>
+
+          <div class="fields">
+            <label class="jc-field">
+              <span class="jc-label">Unternehmen</span>
+              <input class="jc-input" [ngModel]="company()" (ngModelChange)="company.set($event)" />
+            </label>
+            <label class="jc-field">
+              <span class="jc-label">Position</span>
+              <input class="jc-input" [ngModel]="role()" (ngModelChange)="role.set($event)" />
+            </label>
+            <label class="jc-field">
+              <span class="jc-label">Ansprechpartner:in</span>
+              <input class="jc-input" [ngModel]="contact()" (ngModelChange)="contact.set($event)" />
+            </label>
+            <label class="jc-field">
+              <span class="jc-label">Adresse</span>
+              <input class="jc-input" [ngModel]="address()" (ngModelChange)="address.set($event)" />
+            </label>
+          </div>
+
+          <div class="block">
+            <span class="jc-label">Anforderungen · Abgleich mit deinem Profil</span>
+            @if (requirements().length > 0) {
+              <div class="chips">
+                @for (req of requirements(); track $index) {
+                  <button
+                    type="button"
+                    class="chip"
+                    [class.matched]="req.matched"
+                    [attr.aria-pressed]="req.matched"
+                    title="Klicken, um den Abgleich zu korrigieren"
+                    (click)="toggleRequirement($index)"
+                  >
+                    <b>{{ req.matched ? '✓' : '–' }}</b
+                    >{{ req.text }}
+                  </button>
+                }
+              </div>
+            } @else {
+              <p class="muted">Keine Anforderungen gefunden.</p>
+            }
+          </div>
+
+          <div class="block">
+            <span class="jc-label">Aufgaben</span>
+            @if (tasks().length > 0) {
+              <ul class="tasks">
+                @for (task of tasks(); track $index) {
+                  <li>{{ task }}</li>
+                }
+              </ul>
+            } @else {
+              <p class="muted">Keine Aufgaben gefunden.</p>
+            }
+          </div>
+        </section>
+
+        <aside class="review-side">
+          <section class="jc-card context">
+            <div>
+              <h3>Kontext für die KI</h3>
+              <p>Welche Dokumente sollen einfließen?</p>
+            </div>
+            <div class="doc-list">
+              @for (doc of readyDocuments(); track doc.id) {
+                <button
+                  type="button"
+                  class="doc"
+                  role="checkbox"
+                  [attr.aria-checked]="isInContext(doc.id)"
+                  (click)="toggleContext(doc.id)"
+                >
+                  <span class="box" [class.on]="isInContext(doc.id)">{{
+                    isInContext(doc.id) ? '✓' : ''
+                  }}</span>
+                  <span class="doc-name">{{ doc.fileName }}</span>
+                  <span class="doc-cat">{{ categoryLabels[doc.category] }}</span>
+                </button>
+              } @empty {
+                <p class="muted">
+                  Noch keine Dokumente mit extrahiertem Text – lade unter „Dokumente“ deinen
+                  Lebenslauf hoch.
+                </p>
+              }
+            </div>
+            <div class="jc-field">
+              <span class="jc-label">Tonalität</span>
+              <div class="jc-segmented" role="radiogroup" aria-label="Tonalität">
+                @for (o of toneOptions; track o.value) {
+                  <button
+                    type="button"
+                    role="radio"
+                    [attr.aria-checked]="tone() === o.value"
+                    [class.active]="tone() === o.value"
+                    (click)="tone.set(o.value)"
+                  >
+                    {{ o.label }}
+                  </button>
+                }
+              </div>
+            </div>
+            <div class="jc-field">
+              <span class="jc-label">Länge</span>
+              <div class="jc-segmented" role="radiogroup" aria-label="Länge">
+                @for (o of lengthOptions; track o.value) {
+                  <button
+                    type="button"
+                    role="radio"
+                    [attr.aria-checked]="length() === o.value"
+                    [class.active]="length() === o.value"
+                    (click)="length.set(o.value)"
+                  >
+                    {{ o.label }}
+                  </button>
+                }
+              </div>
+            </div>
+          </section>
+          @if (generateError()) {
+            <div class="jc-error-box" role="alert">{{ generateError() }}</div>
+          }
+          <button
+            type="button"
+            class="jc-btn jc-btn-primary generate"
+            [disabled]="generating()"
+            (click)="generate()"
+          >
+            @if (generating()) {
+              <span class="jc-spinner light"></span> Anschreiben wird erstellt …
+            } @else {
+              Anschreiben generieren
+            }
+          </button>
+          <button type="button" class="restart" (click)="restart()">
+            Andere Anzeige analysieren
+          </button>
+        </aside>
+      </div>
+    }
+  }
+</div>

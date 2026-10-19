@@ -1,0 +1,107 @@
+<div class="login">
+  <section class="brand">
+    <app-logo [size]="32" />
+    <div class="claim">
+      <h1>Jede Bewerbung<br />maßgeschneidert.</h1>
+      <p>
+        Link zur Stellenanzeige einfügen, mit deinem Profil abgleichen, das Anschreiben im Chat
+        verfeinern – und als druckfertiges PDF exportieren.
+      </p>
+    </div>
+    <ol class="steps">
+      @for (step of steps; track $index) {
+        <li>
+          <span class="num">0{{ $index + 1 }}</span
+          ><span class="label">{{ step }}</span>
+        </li>
+      }
+    </ol>
+  </section>
+
+  <section class="form-side">
+    <form class="form" (ngSubmit)="submit()" novalidate>
+      <div class="tabs" role="tablist" aria-label="Anmelden oder registrieren">
+        <button
+          type="button"
+          role="tab"
+          [class.active]="!isRegister()"
+          [attr.aria-selected]="!isRegister()"
+          (click)="setMode('login')"
+        >
+          Anmelden
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.active]="isRegister()"
+          [attr.aria-selected]="isRegister()"
+          (click)="setMode('register')"
+        >
+          Registrieren
+        </button>
+      </div>
+
+      <div>
+        <h2>{{ title() }}</h2>
+        <p class="subtitle">{{ subtitle() }}</p>
+      </div>
+
+      <div class="fields">
+        @if (isRegister()) {
+          <label class="jc-field">
+            <span class="jc-label">Name</span>
+            <input
+              class="jc-input jc-input-lg"
+              name="name"
+              autocomplete="name"
+              placeholder="Vor- und Nachname"
+              [ngModel]="name()"
+              (ngModelChange)="name.set($event)"
+            />
+          </label>
+        }
+        <label class="jc-field">
+          <span class="jc-label">E-Mail</span>
+          <input
+            class="jc-input jc-input-lg"
+            type="email"
+            name="email"
+            autocomplete="email"
+            placeholder="name@beispiel.de"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+          />
+        </label>
+        <div class="jc-field">
+          <span class="jc-label password-label">
+            <label for="password">Passwort</label>
+            @if (!isRegister()) {
+              <button type="button" class="forgot" (click)="forgotPassword()">Vergessen?</button>
+            }
+          </span>
+          <input
+            id="password"
+            class="jc-input jc-input-lg"
+            type="password"
+            name="password"
+            [attr.autocomplete]="isRegister() ? 'new-password' : 'current-password'"
+            placeholder="Mindestens 8 Zeichen"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+          />
+        </div>
+
+        @if (error()) {
+          <div class="jc-error-box" role="alert">{{ error() }}</div>
+        }
+        @if (info()) {
+          <div class="jc-info-box" role="status">{{ info() }}</div>
+        }
+
+        <button type="submit" class="jc-btn jc-btn-primary submit" [disabled]="busy()">
+          {{ busy() ? 'Einen Moment …' : isRegister() ? 'Konto erstellen' : 'Anmelden' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</div>

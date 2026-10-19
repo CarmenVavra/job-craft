@@ -1,0 +1,29 @@
+<div class="shell">
+  <aside class="sidebar">
+    <app-logo class="logo" [size]="30" />
+    <nav aria-label="Hauptnavigation">
+      @for (item of nav; track item.id) {
+        <a
+          class="nav-item"
+          [class.active]="active() === item.id"
+          [routerLink]="item.link"
+          [attr.aria-current]="active() === item.id ? 'page' : null"
+        >
+          <span class="dot"></span>{{ item.label }}
+        </a>
+      }
+    </nav>
+    <div class="user">
+      <div class="avatar" aria-hidden="true">{{ initials() }}</div>
+      <div class="who">
+        <div class="name">{{ name() }}</div>
+        <div class="email">{{ email() }}</div>
+      </div>
+      <button type="button" class="logout" title="Abmelden" (click)="logout()">Abmelden</button>
+    </div>
+  </aside>
+  <main class="main">
+    <router-outlet />
+  </main>
+</div>
+<app-toast />
