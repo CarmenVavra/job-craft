@@ -3,7 +3,10 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { profileFixture, summaryFixture } from '../../../testing/fixtures';
 import { testProviders, text } from '../../../testing/providers';
+import { of } from 'rxjs';
 import { ProfileStore } from '../../core/api/profile.store';
+import { ConfirmService } from '../../core/ui/confirm.service';
+import { ToastService } from '../../core/ui/toast.service';
 import { DashboardComponent } from './dashboard.component';
 
 describe('DashboardComponent', () => {
@@ -64,5 +67,33 @@ describe('DashboardComponent', () => {
     req.flush({});
     await fixture.whenStable();
     expect(text(el.querySelector('.status-pill'))).toBe('Versendet ▾');
+  });
+
+  it('deletes an application after confirmation', async () => {
+    const { fixture, el } = await setup();
+    const confirm = spyOn(TestBed.inject(ConfirmService), 'confirm').and.returnValue(of(true));
+    (el.querySelector('.delete') as HTMLButtonElement).click();
+
+    expect(confirm).toHaveBeenCalledWith(jasmine.objectContaining({ danger: true }));
+    const req = http.expectOne('/api/applications/app-1');
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null);
+    await fixture.whenStable();
+
+    expect(el.querySelectorAll('.row:not(.header)').length).toBe(1);
+    expect(TestBed.inject(ToastService).message()).toBe(
+      'Bewerbung bei Nordwind Logistik GmbH gelöscht',
+    );
+  });
+
+  it('keeps the application when deletion is cancelled', async () => {
+    const { el } = await setup();
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    spyOn(TestBed.inject(ConfirmService), 'confirm').and.returnValue(of(false));
+    (el.querySelector('.delete') as HTMLButtonElement).click();
+
+    http.expectNone('/api/applications/app-1');
+    expect(el.querySelectorAll('.row:not(.header)').length).toBe(2);
+    expect(navigate).not.toHaveBeenCalled();
   });
 });

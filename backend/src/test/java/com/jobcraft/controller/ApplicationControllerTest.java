@@ -2,8 +2,10 @@ package com.jobcraft.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -125,6 +127,12 @@ class ApplicationControllerTest {
         mvc.perform(put("/api/applications/" + APP_ID + "/paragraphs").with(user())
                         .contentType(MediaType.APPLICATION_JSON).content("{\"paragraphs\":[]}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deletesApplication() throws Exception {
+        mvc.perform(delete("/api/applications/" + APP_ID).with(user())).andExpect(status().isNoContent());
+        verify(applicationService).delete(USER_ID, APP_ID);
     }
 
     @Test

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -134,6 +135,10 @@ class JobCraftIntegrationTest {
                         org.hamcrest.Matchers.containsString("Bewerbung_Quantis_Software_GmbH_Hoffmann.pdf")));
 
         mvc.perform(auth(get("/api/applications/" + appId), "x" + token)).andExpect(status().isUnauthorized());
+
+        // Löschen entfernt die Bewerbung samt Versionen und Chat-Verlauf (ON DELETE CASCADE).
+        mvc.perform(auth(delete("/api/applications/" + appId), token)).andExpect(status().isNoContent());
+        assertThat(json(mvc.perform(auth(get("/api/applications"), token)).andExpect(status().isOk()))).isEmpty();
     }
 
     @Test
@@ -144,6 +149,10 @@ class JobCraftIntegrationTest {
                 .content("{\"url\":\"" + SAMPLE_URL + "\"}"))).get("id").asText();
 
         mvc.perform(auth(get("/api/applications/" + appId), other)).andExpect(status().isNotFound());
+        mvc.perform(auth(delete("/api/applications/" + appId), other)).andExpect(status().isNotFound());
+
+        mvc.perform(auth(delete("/api/applications/" + appId), owner)).andExpect(status().isNoContent());
+        mvc.perform(auth(get("/api/applications/" + appId), owner)).andExpect(status().isNotFound());
     }
 
     private String register(String email) throws Exception {

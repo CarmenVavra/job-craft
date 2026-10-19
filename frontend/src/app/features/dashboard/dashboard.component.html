@@ -126,7 +126,19 @@
         </div>
         <span class="date">{{ formatDate(app.createdAt) }}</span>
         <span class="version">v{{ app.latestVersion }}</span>
-        <span class="open">Öffnen →</span>
+        <span class="row-actions">
+          <button
+            type="button"
+            class="delete"
+            [attr.aria-label]="'Bewerbung bei ' + (app.companyName ?? '') + ' löschen'"
+            title="Bewerbung löschen"
+            (click)="remove($event, app)"
+            (keydown.enter)="$event.stopPropagation()"
+          >
+            Löschen
+          </button>
+          <span class="open">Öffnen →</span>
+        </span>
       </div>
     } @empty {
       @if (loaded()) {

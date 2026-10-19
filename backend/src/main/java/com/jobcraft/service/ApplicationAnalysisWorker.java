@@ -21,6 +21,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -95,8 +96,15 @@ public class ApplicationAnalysisWorker {
                     .filter(d -> DEFAULT_CONTEXT.contains(d.getCategory())).map(Document::getId).toList()));
             app.setStatus(ApplicationStatus.ANALYZED);
             step(app, STEPS);
+        } catch (AnalysisCancelledException e) {
+            log.info("Analyse der Bewerbung {} abgebrochen: Bewerbung wurde gelöscht", applicationId);
         } catch (ApiException e) {
             fail(app, e.getMessage());
+        } catch (OptimisticLockingFailureException e) {
+            if (applicationRepository.existsById(applicationId)) {
+                log.error("Analyse der Bewerbung {} fehlgeschlagen", applicationId, e);
+                fail(app, "Die Stellenanzeige konnte nicht analysiert werden.");
+            }
         } catch (RuntimeException e) {
             log.error("Analyse der Bewerbung {} fehlgeschlagen", applicationId, e);
             fail(app, "Die Stellenanzeige konnte nicht analysiert werden.");
@@ -104,13 +112,31 @@ public class ApplicationAnalysisWorker {
     }
 
     private Application step(Application app, int step) {
+        ensureNotDeleted(app);
         app.setAnalysisStep(step);
         return applicationRepository.save(app);
     }
 
     private void fail(Application app, String message) {
+        if (!applicationRepository.existsById(app.getId())) {
+            return;
+        }
         app.setStatus(ApplicationStatus.ANALYSIS_FAILED);
         app.setErrorMessage(message);
         applicationRepository.save(app);
+    }
+
+    /** Die Bewerbung kann gelöscht werden, während die Analyse noch läuft – dann wird still abgebrochen. */
+    private void ensureNotDeleted(Application app) {
+        if (!applicationRepository.existsById(app.getId())) {
+            throw new AnalysisCancelledException();
+        }
+    }
+
+    /** Signalisiert, dass die Bewerbung während der Analyse gelöscht wurde. */
+    private static final class AnalysisCancelledException extends RuntimeException {
+        AnalysisCancelledException() {
+            super(null, null, false, false);
+        }
     }
 }

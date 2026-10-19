@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, switchMap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApplicationService } from '../../core/api/application.service';
@@ -15,6 +16,7 @@ import { DocumentStore } from '../../core/api/document.store';
 import { ProfileStore } from '../../core/api/profile.store';
 import { AuthService } from '../../core/auth/auth.service';
 import { ApplicationStatus, ApplicationSummary } from '../../core/models/api.models';
+import { ConfirmService } from '../../core/ui/confirm.service';
 import { ToastService } from '../../core/ui/toast.service';
 import {
   SAMPLE_URL,
@@ -46,6 +48,7 @@ export class DashboardComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly confirmDialog = inject(ConfirmService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly statusLabels = STATUS_LABELS;
@@ -144,6 +147,32 @@ export class DashboardComponent implements OnInit {
             apps.map((a) => (a.id === app.id ? { ...a, status } : a)),
           );
           this.toast.show(`Status auf „${STATUS_LABELS[status]}“ gesetzt`);
+        },
+        error: (err: unknown) => this.toast.show(errorMessage(err)),
+      });
+  }
+
+  /** Löscht eine Bewerbung nach Bestätigung (inkl. aller Versionen und des Chat-Verlaufs). */
+  protected remove(event: Event, app: ApplicationSummary): void {
+    event.stopPropagation();
+    this.statusMenuFor.set(null);
+    const company = app.companyName ?? 'dieses Unternehmen';
+    this.confirmDialog
+      .confirm({
+        title: 'Bewerbung löschen?',
+        message: `Die Bewerbung bei ${company} wird mit allen Versionen des Anschreibens und dem Chat-Verlauf endgültig gelöscht.`,
+        confirmLabel: 'Löschen',
+        danger: true,
+      })
+      .pipe(
+        filter((confirmed) => confirmed),
+        switchMap(() => this.applicationsApi.delete(app.id)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: () => {
+          this.applications.update((apps) => apps.filter((a) => a.id !== app.id));
+          this.toast.show(`Bewerbung bei ${company} gelöscht`);
         },
         error: (err: unknown) => this.toast.show(errorMessage(err)),
       });
