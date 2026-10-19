@@ -90,6 +90,20 @@
             (ngModelChange)="password.set($event)"
           />
         </div>
+        @if (isRegister()) {
+          <label class="jc-field">
+            <span class="jc-label">Passwort wiederholen</span>
+            <input
+              class="jc-input jc-input-lg"
+              type="password"
+              name="passwordRepeat"
+              autocomplete="new-password"
+              placeholder="Passwort erneut eingeben"
+              [ngModel]="passwordRepeat()"
+              (ngModelChange)="passwordRepeat.set($event)"
+            />
+          </label>
+        }
 
         @if (error()) {
           <div class="jc-error-box" role="alert">{{ error() }}</div>

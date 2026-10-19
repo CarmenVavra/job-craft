@@ -48,6 +48,51 @@ describe('LoginComponent', () => {
     expect(text(el.querySelector('[role=alert]'))).toBe('Bitte gib deinen Namen ein.');
   });
 
+  it('shows the repeat field only when registering', async () => {
+    const { fixture, el } = await setup();
+    expect(el.querySelector('input[name=passwordRepeat]')).toBeNull();
+    (el.querySelectorAll('.tabs button')[1] as HTMLButtonElement).click();
+    await fixture.whenStable();
+    expect(el.querySelector('input[name=passwordRepeat]')).not.toBeNull();
+  });
+
+  it('rejects different passwords when registering', async () => {
+    const { fixture, el } = await setup();
+    (el.querySelectorAll('.tabs button')[1] as HTMLButtonElement).click();
+    await fixture.whenStable();
+    type(el, 'input[name=name]', 'Lena Hoffmann');
+    type(el, 'input[name=email]', 'lena@example.de');
+    type(el, 'input[name=password]', 'geheim123');
+    type(el, 'input[name=passwordRepeat]', 'geheim124');
+    (el.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+    await fixture.whenStable();
+
+    expect(text(el.querySelector('[role=alert]'))).toBe(
+      'Die beiden Passwörter stimmen nicht überein.',
+    );
+    TestBed.inject(HttpTestingController).expectNone('/api/auth/register');
+  });
+
+  it('registers when both passwords match', async () => {
+    const { fixture, el } = await setup();
+    spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    (el.querySelectorAll('.tabs button')[1] as HTMLButtonElement).click();
+    await fixture.whenStable();
+    type(el, 'input[name=name]', 'Lena Hoffmann');
+    type(el, 'input[name=email]', 'lena@example.de');
+    type(el, 'input[name=password]', 'geheim123');
+    type(el, 'input[name=passwordRepeat]', 'geheim123');
+    (el.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+
+    const req = TestBed.inject(HttpTestingController).expectOne('/api/auth/register');
+    expect(req.request.body).toEqual({
+      name: 'Lena Hoffmann',
+      email: 'lena@example.de',
+      password: 'geheim123',
+    });
+    req.flush({ token: 'a.b.c', user: { id: 'u1', email: 'lena@example.de', name: 'Lena' } });
+  });
+
   it('logs in and navigates to the dashboard', async () => {
     const { fixture, el } = await setup();
     const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);

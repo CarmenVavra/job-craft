@@ -39,6 +39,7 @@ export class LoginComponent {
   protected readonly name = signal('');
   protected readonly email = signal('');
   protected readonly password = signal('');
+  protected readonly passwordRepeat = signal('');
   protected readonly error = signal('');
   protected readonly info = signal('');
   protected readonly busy = signal(false);
@@ -84,6 +85,10 @@ export class LoginComponent {
       this.error.set('Bitte gib deinen Namen ein.');
       return;
     }
+    if (this.isRegister() && password !== this.passwordRepeat()) {
+      this.error.set('Die beiden Passwörter stimmen nicht überein.');
+      return;
+    }
     this.error.set('');
     this.info.set('');
     this.busy.set(true);
@@ -93,6 +98,7 @@ export class LoginComponent {
     request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.password.set('');
+        this.passwordRepeat.set('');
         void this.router.navigate(['/uebersicht']);
       },
       error: (err: unknown) => {

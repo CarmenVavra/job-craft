@@ -19,17 +19,15 @@ describe('DocumentsComponent', () => {
 
   async function setup() {
     TestBed.inject(DocumentStore).load().subscribe();
-    http
-      .expectOne('/api/documents')
-      .flush([
-        documentFixture(),
-        documentFixture({
-          id: 'doc-2',
-          fileName: 'Skill-Profil.docx',
-          category: 'SKILLS',
-          contentType: 'x',
-        }),
-      ]);
+    http.expectOne('/api/documents').flush([
+      documentFixture(),
+      documentFixture({
+        id: 'doc-2',
+        fileName: 'Skill-Profil.docx',
+        category: 'SKILLS',
+        contentType: 'x',
+      }),
+    ]);
     const fixture = TestBed.createComponent(DocumentsComponent);
     await fixture.whenStable();
     return { fixture, el: fixture.nativeElement as HTMLElement };
