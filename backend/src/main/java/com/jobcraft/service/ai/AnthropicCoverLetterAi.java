@@ -2,6 +2,11 @@ package com.jobcraft.service.ai;
 
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.errors.AnthropicException;
+import com.anthropic.errors.InternalServerException;
+import com.anthropic.errors.NotFoundException;
+import com.anthropic.errors.PermissionDeniedException;
+import com.anthropic.errors.RateLimitException;
+import com.anthropic.errors.UnauthorizedException;
 import com.anthropic.models.messages.MessageCreateParams;
 import com.anthropic.models.messages.StopReason;
 import com.anthropic.models.messages.StructuredMessage;
@@ -12,6 +17,7 @@ import com.jobcraft.model.Requirement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 
@@ -177,10 +183,40 @@ public class AnthropicCoverLetterAi implements CoverLetterAi {
                     .findFirst()
                     .orElseThrow(() -> new ExternalServiceException("Die KI hat keine Antwort geliefert."));
         } catch (AnthropicException e) {
-            log.warn("Anthropic-Anfrage fehlgeschlagen: {}", e.getMessage());
-            throw new ExternalServiceException("Der KI-Dienst ist gerade nicht erreichbar. Bitte versuche es "
-                    + "später erneut.", e);
+            log.warn("Anthropic-Anfrage fehlgeschlagen ({}): {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            throw new ExternalServiceException(userMessage(e), e);
         }
+    }
+
+    /**
+     * Übersetzt Fehler der Anthropic-API in verständliche Hinweise für Nutzer:innen.
+     *
+     * @param e Fehler des SDK
+     * @return deutsche Fehlermeldung
+     */
+    static String userMessage(AnthropicException e) {
+        String detail = e.getMessage() == null ? "" : e.getMessage().toLowerCase(Locale.ROOT);
+        if (detail.contains("credit balance")) {
+            return "Dein Anthropic-Konto hat kein Guthaben. Bitte lade unter console.anthropic.com → Billing "
+                    + "Guthaben auf und versuche es dann erneut.";
+        }
+        if (e instanceof UnauthorizedException) {
+            return "Der Anthropic-API-Key ist ungültig. Bitte prüfe ANTHROPIC_API_KEY in jobcraft-env.bat.";
+        }
+        if (e instanceof PermissionDeniedException) {
+            return "Der Anthropic-API-Key hat keine Berechtigung für dieses Modell.";
+        }
+        if (e instanceof NotFoundException) {
+            return "Das eingestellte KI-Modell wurde nicht gefunden. Bitte prüfe JOBCRAFT_AI_MODEL.";
+        }
+        if (e instanceof RateLimitException) {
+            return "Das Anfrage- oder Ausgabenlimit bei Anthropic ist erreicht. Bitte warte kurz oder erhöhe das "
+                    + "Limit in der Anthropic-Konsole.";
+        }
+        if (e instanceof InternalServerException || detail.contains("overloaded")) {
+            return "Der KI-Dienst ist gerade überlastet. Bitte versuche es in ein paar Minuten erneut.";
+        }
+        return "Der KI-Dienst ist gerade nicht erreichbar. Bitte versuche es später erneut.";
     }
 
     private static String contextBlock(GenerationContext ctx) {

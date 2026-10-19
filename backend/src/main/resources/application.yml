@@ -4,6 +4,11 @@ server:
     include-stacktrace: never
     include-message: never
 
+# Zusätzlich zur Konsole in eine Datei loggen (rotierend), damit Fehler nachvollziehbar bleiben.
+logging:
+  file:
+    name: ${JOBCRAFT_LOG_FILE:./data/logs/jobcraft.log}
+
 spring:
   application:
     name: jobcraft
