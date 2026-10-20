@@ -44,6 +44,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers("/error", "/actuator/health").permitAll()
+                        // Shutdown ist nur auf dem Management-Port 127.0.0.1:8091 erreichbar (für stop.bat).
+                        .requestMatchers(HttpMethod.POST, "/actuator/shutdown").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()));
         return http.build();

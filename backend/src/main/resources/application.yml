@@ -59,6 +59,25 @@ jobcraft:
     demo-enabled: true
   pdf:
     warm-up: ${JOBCRAFT_PDF_WARMUP:true}
+  backup:
+    # Sicherung der lokalen H2-Datenbank beim Start und danach regelmäßig.
+    enabled: ${JOBCRAFT_BACKUP:true}
+    directory: ./data/backups
+    interval: PT1H
+    keep: 48
+
+# Geordnetes Herunterfahren für stop.bat – nur lokal erreichbar (127.0.0.1:8091).
+management:
+  server:
+    port: ${JOBCRAFT_MANAGEMENT_PORT:8091}
+    address: 127.0.0.1
+  endpoints:
+    web:
+      exposure:
+        include: health,shutdown
+  endpoint:
+    shutdown:
+      access: unrestricted
 
 ---
 spring:
@@ -66,7 +85,9 @@ spring:
     activate:
       on-profile: dev
   datasource:
-    url: jdbc:h2:file:./data/jobcraft;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;AUTO_SERVER=TRUE
+    # Bewusst ohne AUTO_SERVER: Nur ein Prozess darf die Datei öffnen. Ein zweiter Start schlägt
+    # sichtbar fehl, statt sich still an einen (evtl. hängenden) alten Prozess zu hängen.
+    url: jdbc:h2:file:./data/jobcraft;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
     username: sa
     password:
 

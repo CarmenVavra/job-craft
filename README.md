@@ -106,6 +106,22 @@ npm start
 **Lokales Testkonto** (nur in der lokalen H2-Datenbank vorhanden, mit Beispieldaten befüllt):
 `lena.hoffmann@jobcraft.test` / `JobCraftDemo2026`. Daten zurücksetzen: Ordner `backend/data/` löschen.
 
+## Datensicherung
+
+- Die lokale H2-Datenbank liegt in `backend/data/jobcraft.mv.db` und darf nur von **einem** Backend-Prozess geöffnet
+  werden (kein `AUTO_SERVER`).
+- **Immer mit `stop.bat` beenden.** Es fährt das Backend geordnet herunter (lokaler Endpunkt
+  `127.0.0.1:8091/actuator/shutdown`), damit alle Daten geschrieben werden. Hartes Beenden nur als Notfall.
+- **Automatische Backups** beim Start und stündlich in `backend/data/backups/jobcraft-JJJJMMTT-hhmmss.zip`; die
+  letzten 48 bleiben erhalten (`jobcraft.backup.*` in `application.yml`).
+- **Wiederherstellen:** `stop.bat` ausführen, die Datei `backend/data/jobcraft.mv.db` wegsichern und ein Backup
+  zurückspielen:
+  ```bat
+  cd backend
+  java -cp %USERPROFILE%\.m2\repository\com\h2database\h2\2.3.232\h2-2.3.232.jar org.h2.tools.Restore -file data\backups\jobcraft-JJJJMMTT-hhmmss.zip -dir data
+  ```
+  Danach `start.bat`.
+
 ## Abweichungen & offene Punkte
 
 - **KI-Anbindung:** statt Spring AI das offizielle Anthropic Java SDK (das Konzept erlaubt „Spring AI oder direkte

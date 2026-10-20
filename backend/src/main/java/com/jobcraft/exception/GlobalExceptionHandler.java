@@ -7,6 +7,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -46,6 +47,11 @@ public class GlobalExceptionHandler {
         MissingServletRequestParameterException.class, MissingServletRequestPartException.class})
     public ResponseEntity<ApiError> handleBadRequest(Exception ex) {
         return build(HttpStatus.BAD_REQUEST, "Die Anfrage ist ungültig.", Map.of());
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiError> handleMediaType(HttpMediaTypeNotSupportedException ex) {
+        return build(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Dieses Datenformat wird nicht unterstützt.", Map.of());
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

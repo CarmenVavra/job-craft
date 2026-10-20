@@ -15,7 +15,19 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param pdf     PDF-Erzeugung
  */
 @ConfigurationProperties(prefix = "jobcraft")
-public record JobCraftProperties(Jwt jwt, Cors cors, Ai ai, Storage storage, Scraper scraper, Pdf pdf) {
+public record JobCraftProperties(Jwt jwt, Cors cors, Ai ai, Storage storage, Scraper scraper, Pdf pdf,
+                                 Backup backup) {
+
+    /**
+     * Sicherung der lokalen H2-Datenbank.
+     *
+     * @param enabled   Sicherungen aktiv
+     * @param directory Zielverzeichnis
+     * @param interval  Abstand der regelmäßigen Sicherungen
+     * @param keep      Anzahl aufzubewahrender Sicherungen
+     */
+    public record Backup(boolean enabled, String directory, Duration interval, int keep) {
+    }
 
     /**
      * JWT-Einstellungen.

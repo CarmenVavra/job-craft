@@ -38,6 +38,19 @@ switch ($Action) {
         exit 1
     }
     'Stop' {
+        # 1. Backend geordnet herunterfahren, damit die Datenbank sauber geschlossen wird.
+        if (Test-Listening 8090) {
+            try {
+                Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:8091/actuator/shutdown' `
+                    -ContentType 'application/json' -Body '{}' -TimeoutSec 10 | Out-Null
+                $deadline = (Get-Date).AddSeconds(30)
+                while ((Test-Listening 8090) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 500 }
+                if (-not (Test-Listening 8090)) { Write-Host 'Backend geordnet beendet.' }
+            } catch {
+                Write-Host 'Geordnetes Beenden nicht moeglich - Backend wird hart beendet.'
+            }
+        }
+        # 2. Was noch laeuft (Frontend, haengendes Backend), hart beenden.
         foreach ($p in 8090, 4300) {
             $listeners = Get-NetTCPConnection -State Listen -LocalPort $p
             if ($listeners) {
