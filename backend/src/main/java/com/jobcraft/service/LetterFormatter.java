@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,10 @@ public class LetterFormatter {
 
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("d. MMMM yyyy", Locale.GERMAN);
     private static final String FALLBACK_SALUTATION = "Sehr geehrte Damen und Herren,";
+    /** Nachgestellte akademische Grade (z. B. B.A., MSc, MBA, LL.M., PhD), die die Anrede nicht enthält. */
+    private static final Pattern POST_NOMINAL = Pattern.compile(
+            "(?i)(B\\.?A|M\\.?A|B\\.?Sc|M\\.?Sc|B\\.?Ed|M\\.?Ed|B\\.?Eng|M\\.?Eng|MBA|MAS|MPA|LL\\.?[BM]"
+                    + "|Ph\\.?D|BBA|Bakk(\\.\\w+)*)\\.?");
 
     private final Clock clock;
 
@@ -68,7 +73,7 @@ public class LetterFormatter {
         if (contact == null || contact.isBlank()) {
             return FALLBACK_SALUTATION;
         }
-        String[] parts = contact.trim().split("\\s+");
+        String[] parts = withoutPostNominals(contact).split("\\s+");
         if (parts.length < 2) {
             return FALLBACK_SALUTATION;
         }
@@ -86,6 +91,23 @@ public class LetterFormatter {
                 .collect(Collectors.joining(" "));
         String lastName = parts[parts.length - 1];
         return prefix + (titles.isEmpty() ? "" : " " + titles) + " " + lastName + ",";
+    }
+
+    /**
+     * Entfernt nachgestellte Titel, die in der Anrede nicht genannt werden – alles nach dem ersten Komma
+     * („Herr Matthias Weigl, B.A.“) sowie akademische Grade am Ende ohne Komma („Frau Anna Berger MSc“).
+     */
+    private static String withoutPostNominals(String contact) {
+        String name = contact.trim();
+        int comma = name.indexOf(',');
+        if (comma > 0) {
+            name = name.substring(0, comma).trim();
+        }
+        List<String> parts = new ArrayList<>(Arrays.asList(name.split("\\s+")));
+        while (parts.size() > 2 && POST_NOMINAL.matcher(parts.get(parts.size() - 1)).matches()) {
+            parts.remove(parts.size() - 1);
+        }
+        return String.join(" ", parts);
     }
 
     private static void addIfPresent(List<String> lines, String value) {

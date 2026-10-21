@@ -22,6 +22,12 @@ class LetterFormatterTest {
         "Frau Dr. Miriam Kessler|Sehr geehrte Frau Dr. Kessler,",
         "Herr Jonas Albers|Sehr geehrter Herr Albers,",
         "Herr Prof. Dr. Felix Brückner|Sehr geehrter Herr Prof. Dr. Brückner,",
+        "Herr Matthias Weigl, B.A.|Sehr geehrter Herr Weigl,",
+        "Frau Dr. Anna Berger, MSc MBA|Sehr geehrte Frau Dr. Berger,",
+        "Frau Anna Berger MSc|Sehr geehrte Frau Berger,",
+        "Herr Jan Novak BSc LL.M.|Sehr geehrter Herr Novak,",
+        "Frau Petra Huber-Mayr, Bakk.phil.|Sehr geehrte Frau Huber-Mayr,",
+        "Herr Ma|Sehr geehrter Herr Ma,",
         "Personalabteilung|Sehr geehrte Damen und Herren,",
         "Frau|Sehr geehrte Damen und Herren,"
     })
