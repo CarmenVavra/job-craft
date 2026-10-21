@@ -58,7 +58,7 @@ Fehlerbehandlung über `@RestControllerAdvice` (`ApiError`, keine Stacktraces).
 | Dokumente | Upload PDF/DOCX ≤ 10 MB (Signaturprüfung), Kategorie-Erkennung, asynchrone Textextraktion (PDFBox/POI), Seitenvorschau als PNG, Ablage lokal oder S3/MinIO |
 | Analyse | Asynchron in 4 Schritten (Seite abrufen → bereinigen → Eckdaten → Profilabgleich), Fortschritt per Polling. Abruf mit Playwright (Chromium headless), Fallback JSoup; Schutz vor internen Adressen (SSRF) |
 | KI | Offizielles Anthropic Java SDK mit strukturierten JSON-Ausgaben (`AnthropicCoverLetterAi`), sonst `TemplateCoverLetterAi` (Demo) |
-| Anschreiben | Jede KI-Antwort erzeugt eine neue `CoverLetter`-Version; Chat-Verlauf mit Metazeile („v2 · Absatz 2 geändert“) |
+| Anschreiben | Jede KI-Antwort erzeugt eine neue `CoverLetter`-Version; Chat-Verlauf mit Metazeile („v2 · Absatz 2 geändert“); Absätze und Anrede direkt im Editor bearbeitbar |
 | PDF | Thymeleaf-Template (`templates/cover-letter.html`, DIN 5008) → Chromium-PDF, optional Lebenslauf/Zeugnisse (PDF) per PDFBox angehängt |
 | Datenbank | Flyway-Migrationen je Datenbank (`db/migration/h2`, `db/migration/postgresql` mit JSONB) |
 
@@ -81,6 +81,7 @@ Briefbogen, Logo, Toast), `features/` (Login, Übersicht, Neue Bewerbung, Editor
 | `GET /api/applications/{id}` | Zustand inkl. Analysefortschritt, Versionen, Chat, Briefdaten |
 | `POST /api/applications/{id}/generate` | Geprüfte Eckdaten + Kontext → Entwurf |
 | `POST /api/applications/{id}/chat` | Änderungswunsch → neue Version |
+| `PUT /api/applications/{id}/salutation` | Eigene Anrede (`null` = automatisch aus der Ansprechperson) |
 | `PATCH /api/applications/{id}/status`, `DELETE /api/applications/{id}` | Status (Entwurf/Versendet/Gespräch/Abgesagt) / löschen |
 | `GET /api/applications/{id}/pdf?version&template&attachCv&attachCertificates` | PDF-Download |
 | `GET /api/system` | Demo-Modus oder Sprachmodell |

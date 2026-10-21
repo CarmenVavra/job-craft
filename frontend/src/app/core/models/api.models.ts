@@ -131,6 +131,8 @@ export interface ApplicationDetail {
   companyName: string | null;
   contactPerson: string | null;
   recipientAddress: string | null;
+  /** Eigene Anrede; {@code null} = automatisch aus der Ansprechperson. */
+  customSalutation: string | null;
   requirements: Requirement[];
   tasks: string[];
   contextDocumentIds: string[];

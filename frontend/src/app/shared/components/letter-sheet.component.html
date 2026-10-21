@@ -42,7 +42,60 @@
     </div>
   }
   <div class="subject">{{ meta()?.subject }}</div>
-  <p class="salutation">{{ meta()?.salutation }}</p>
+  @if (editingSalutation()) {
+    <div class="edit-box">
+      <input
+        class="edit-area salutation-input"
+        aria-label="Anrede bearbeiten"
+        maxlength="200"
+        [ngModel]="salutationDraft()"
+        (ngModelChange)="salutationDraft.set($event)"
+        (keydown)="onSalutationKey($event)"
+      />
+      <div class="edit-actions">
+        <span class="hint">Enter speichert · Esc bricht ab · gilt für alle Versionen</span>
+        <button type="button" class="edit-cancel" (click)="editingSalutation.set(false)">
+          Abbrechen
+        </button>
+        <button
+          type="button"
+          class="edit-save"
+          [disabled]="busy() || !salutationDraft().trim()"
+          (click)="saveSalutation()"
+        >
+          Speichern
+        </button>
+      </div>
+    </div>
+  } @else if (editable()) {
+    <div class="paragraph-wrap salutation-wrap">
+      <p class="salutation">{{ meta()?.salutation }}</p>
+      <div class="salutation-tools">
+        <button
+          type="button"
+          class="tool"
+          aria-label="Anrede bearbeiten"
+          [disabled]="busy() || editingIndex() !== null"
+          (click)="startSalutationEdit()"
+        >
+          Bearbeiten
+        </button>
+        @if (customSalutation()) {
+          <button
+            type="button"
+            class="tool"
+            title="Anrede wieder automatisch aus der Ansprechperson bilden"
+            [disabled]="busy() || editingIndex() !== null"
+            (click)="resetSalutation()"
+          >
+            Automatisch
+          </button>
+        }
+      </div>
+    </div>
+  } @else {
+    <p class="salutation">{{ meta()?.salutation }}</p>
+  }
   @for (paragraph of paragraphs(); track $index) {
     @if (editingIndex() === $index) {
       <div class="edit-box">
@@ -74,7 +127,7 @@
           <button
             type="button"
             class="tool"
-            [disabled]="busy() || editingIndex() !== null"
+            [disabled]="busy() || editingIndex() !== null || editingSalutation()"
             [attr.aria-label]="'Absatz ' + ($index + 1) + ' bearbeiten'"
             (click)="startEdit($index)"
           >

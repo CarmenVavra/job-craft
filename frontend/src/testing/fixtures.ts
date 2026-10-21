@@ -69,6 +69,7 @@ export function applicationFixture(overrides: Partial<ApplicationDetail> = {}): 
     companyName: 'Quantis Software GmbH',
     contactPerson: 'Frau Dr. Miriam Kessler',
     recipientAddress: 'Am Mediapark 8, 50670 Köln',
+    customSalutation: null,
     requirements: [
       { text: 'Java 17+ & Spring Boot', matched: true },
       { text: 'Kubernetes / Docker', matched: false },

@@ -50,6 +50,11 @@ export class ApplicationService {
     return this.http.put<ApplicationDetail>(`/api/applications/${id}/paragraphs`, { paragraphs });
   }
 
+  /** Eigene Anrede setzen; {@code null} stellt die automatische Anrede wieder her. */
+  updateSalutation(id: string, salutation: string | null): Observable<ApplicationDetail> {
+    return this.http.put<ApplicationDetail>(`/api/applications/${id}/salutation`, { salutation });
+  }
+
   updateStatus(id: string, status: ApplicationStatus): Observable<ApplicationDetail> {
     return this.http.patch<ApplicationDetail>(`/api/applications/${id}/status`, { status });
   }

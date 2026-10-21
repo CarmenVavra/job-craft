@@ -6,6 +6,7 @@ import com.jobcraft.dto.ChatRequest;
 import com.jobcraft.dto.CreateApplicationRequest;
 import com.jobcraft.dto.GenerateRequest;
 import com.jobcraft.dto.UpdateParagraphsRequest;
+import com.jobcraft.dto.UpdateSalutationRequest;
 import com.jobcraft.dto.UpdateStatusRequest;
 import com.jobcraft.model.LetterStyle;
 import com.jobcraft.service.ApplicationService;
@@ -81,6 +82,13 @@ public class ApplicationController {
     public ResponseEntity<ApplicationDetailDto> updateParagraphs(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id,
                                                                  @Valid @RequestBody UpdateParagraphsRequest request) {
         return ResponseEntity.ok(applicationService.updateParagraphs(CurrentUser.id(jwt), id, request.paragraphs()));
+    }
+
+    @PutMapping("/{id}/salutation")
+    public ResponseEntity<ApplicationDetailDto> updateSalutation(@AuthenticationPrincipal Jwt jwt,
+                                                                 @PathVariable UUID id,
+                                                                 @Valid @RequestBody UpdateSalutationRequest request) {
+        return ResponseEntity.ok(applicationService.updateSalutation(CurrentUser.id(jwt), id, request.salutation()));
     }
 
     @PatchMapping("/{id}/status")

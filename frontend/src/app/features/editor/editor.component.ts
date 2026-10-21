@@ -216,6 +216,29 @@ export class EditorComponent implements OnInit {
     );
   }
 
+  /** Setzt eine eigene Anrede ({@code null} = automatisch); gilt für alle Versionen. */
+  protected saveSalutation(salutation: string | null): void {
+    const app = this.application();
+    if (!app || this.saving()) {
+      return;
+    }
+    this.saving.set(true);
+    this.api
+      .updateSalutation(app.id, salutation)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.saving.set(false);
+          this.application.set(updated);
+          this.toast.show(salutation === null ? 'Anrede wieder automatisch' : 'Anrede gespeichert');
+        },
+        error: (err: unknown) => {
+          this.saving.set(false);
+          this.toast.show(errorMessage(err, 'Die Anrede konnte nicht gespeichert werden.'));
+        },
+      });
+  }
+
   private saveParagraphs(paragraphs: string[], toast: string): void {
     const app = this.application();
     if (!app || this.saving() || this.isOldVersion()) {

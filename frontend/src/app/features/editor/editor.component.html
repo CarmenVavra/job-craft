@@ -42,8 +42,10 @@
           [highlighted]="visibleHighlights()"
           [editable]="!isOldVersion()"
           [busy]="typing() || saving()"
+          [customSalutation]="app.customSalutation !== null"
           (paragraphSave)="saveParagraph($event.index, $event.text)"
           (paragraphDelete)="deleteParagraph($event)"
+          (salutationSave)="saveSalutation($event)"
         />
       </div>
 

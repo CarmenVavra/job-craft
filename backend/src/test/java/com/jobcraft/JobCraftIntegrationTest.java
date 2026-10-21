@@ -141,6 +141,19 @@ class JobCraftIntegrationTest {
         assertThat(deleted.get("versions").get(3).get("paragraphs")).hasSize(4);
         assertThat(deleted.get("messages").get(4).get("meta").asText()).isEqualTo("v4 · Absatz 1 gelöscht");
 
+        JsonNode greeted = json(mvc.perform(auth(put("/api/applications/" + appId + "/salutation"), token)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"salutation\":\" Liebe Frau Kessler, \"}"))
+                .andExpect(status().isOk()));
+        assertThat(greeted.get("letter").get("salutation").asText()).isEqualTo("Liebe Frau Kessler,");
+        assertThat(greeted.get("customSalutation").asText()).isEqualTo("Liebe Frau Kessler,");
+        assertThat(greeted.get("versions")).hasSize(4);
+        assertThat(greeted.get("messages").get(5).get("meta").asText()).isEqualTo("Anrede · Liebe Frau Kessler,");
+        JsonNode reset = json(mvc.perform(auth(put("/api/applications/" + appId + "/salutation"), token)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"salutation\":null}"))
+                .andExpect(status().isOk()));
+        assertThat(reset.get("letter").get("salutation").asText()).isEqualTo("Sehr geehrte Frau Dr. Kessler,");
+        assertThat(reset.get("customSalutation").isNull()).isTrue();
+
         JsonNode list = json(mvc.perform(auth(get("/api/applications"), token)).andExpect(status().isOk()));
         assertThat(list.get(0).get("latestVersion").asInt()).isEqualTo(4);
 

@@ -53,7 +53,9 @@ public class LetterFormatter {
 
         String subject = "Bewerbung als " + TemplateCoverLetterAi.cleanRole(application.getJobTitle());
         return new LetterMetaDto(name, senderLine, recipient, dateLine, subject.trim(),
-                salutation(application.getContactPerson()), "Mit freundlichen Grüßen");
+                application.getSalutation() == null || application.getSalutation().isBlank()
+                        ? salutation(application.getContactPerson()) : application.getSalutation().trim(),
+                "Mit freundlichen Grüßen");
     }
 
     /**

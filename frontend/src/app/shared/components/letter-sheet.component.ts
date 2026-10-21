@@ -35,12 +35,18 @@ export class LetterSheetComponent {
   readonly editable = input(false);
   /** Sperrt die Bearbeitung, z. B. während gespeichert wird. */
   readonly busy = input(false);
+  /** Die Anrede wurde von Hand festgelegt (sonst automatisch aus der Ansprechperson). */
+  readonly customSalutation = input(false);
 
   readonly paragraphSave = output<{ index: number; text: string }>();
   readonly paragraphDelete = output<number>();
+  /** Neue Anrede; {@code null} = wieder automatisch. */
+  readonly salutationSave = output<string | null>();
 
   protected readonly editingIndex = signal<number | null>(null);
   protected readonly draft = signal('');
+  protected readonly editingSalutation = signal(false);
+  protected readonly salutationDraft = signal('');
 
   protected readonly modern = computed(() => this.letterStyle() === 'MODERN');
   protected readonly name = computed(() => this.profile()?.fullName ?? '');
@@ -71,6 +77,11 @@ export class LetterSheetComponent {
       this.paragraphs();
       this.editable();
       this.editingIndex.set(null);
+    });
+    effect(() => {
+      this.meta();
+      this.editable();
+      this.editingSalutation.set(false);
     });
   }
 
@@ -106,6 +117,37 @@ export class LetterSheetComponent {
     } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
       this.saveEdit(index);
+    }
+  }
+
+  protected startSalutationEdit(): void {
+    this.salutationDraft.set(this.meta()?.salutation ?? '');
+    this.editingSalutation.set(true);
+  }
+
+  protected saveSalutation(): void {
+    const text = this.salutationDraft().trim();
+    if (!text) {
+      return;
+    }
+    if (text === this.meta()?.salutation) {
+      this.editingSalutation.set(false);
+      return;
+    }
+    this.salutationSave.emit(text);
+  }
+
+  protected resetSalutation(): void {
+    this.salutationSave.emit(null);
+  }
+
+  protected onSalutationKey(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.editingSalutation.set(false);
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      this.saveSalutation();
     }
   }
 

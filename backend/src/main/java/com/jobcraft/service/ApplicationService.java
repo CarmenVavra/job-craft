@@ -39,6 +39,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -250,6 +251,31 @@ public class ApplicationService {
     }
 
     /**
+     * Setzt eine eigene Anrede oder stellt die automatische wieder her. Die Anrede gilt für alle Versionen.
+     *
+     * @param userId        Benutzer
+     * @param applicationId Bewerbung
+     * @param salutation    eigene Anrede; leer oder {@code null} = automatisch aus der Ansprechperson
+     * @return Zustand inkl. neuer Briefdaten
+     */
+    public ApplicationDetailDto updateSalutation(UUID userId, UUID applicationId, String salutation) {
+        String next = trimToNull(salutation);
+        return tx.execute(status -> {
+            Application app = load(userId, applicationId);
+            if (Objects.equals(next, app.getSalutation())) {
+                return detail(app);
+            }
+            app.setSalutation(next);
+            String text = next == null
+                    ? "Die Anrede wird wieder automatisch aus der Ansprechperson gebildet."
+                    : "Du hast die Anrede geändert.";
+            saveMessage(app.getId(), ChatRole.SYSTEM, text, "Anrede · " + letterFormatter.format(null, app)
+                    .salutation(), null);
+            return detail(app);
+        });
+    }
+
+    /**
      * @return Index des entfernten Absatzes, wenn {@code next} genau {@code current} ohne einen Absatz ist, sonst -1
      */
     private static int deletedIndex(List<String> current, List<String> next) {
@@ -397,7 +423,7 @@ public class ApplicationService {
         List<RequirementDto> requirements = app.getRequirements() == null ? List.of()
                 : app.getRequirements().stream().map(r -> new RequirementDto(r.text(), r.matched())).toList();
         return new ApplicationDetailDto(app.getId(), app.getJobUrl(), app.getJobTitle(), app.getCompanyName(),
-                app.getContactPerson(), app.getRecipientAddress(), requirements,
+                app.getContactPerson(), app.getRecipientAddress(), app.getSalutation(), requirements,
                 app.getTasks() == null ? List.of() : app.getTasks(),
                 app.getContextDocumentIds() == null ? List.of() : app.getContextDocumentIds(),
                 app.getTone(), app.getLetterLength(), app.getStatus(), app.getAnalysisStep(), app.getErrorMessage(),

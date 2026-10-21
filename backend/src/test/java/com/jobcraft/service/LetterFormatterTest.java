@@ -59,6 +59,18 @@ class LetterFormatterTest {
     }
 
     @Test
+    void prefersCustomSalutation() {
+        Application app = new Application();
+        app.setJobTitle("Backend Developer");
+        app.setContactPerson("Frau Dr. Miriam Kessler");
+        app.setSalutation("  Liebe Frau Kessler,  ");
+        assertThat(formatter.format(null, app).salutation()).isEqualTo("Liebe Frau Kessler,");
+
+        app.setSalutation(" ");
+        assertThat(formatter.format(null, app).salutation()).isEqualTo("Sehr geehrte Frau Dr. Kessler,");
+    }
+
+    @Test
     void handlesMissingProfile() {
         Application app = new Application();
         app.setJobTitle("Backend Developer");

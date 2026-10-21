@@ -52,6 +52,10 @@ public class Application {
     @Column(name = "recipient_address")
     private String recipientAddress;
 
+    /** Eigene Anrede; {@code null} = automatisch aus der Ansprechperson. */
+    @Column(name = "salutation")
+    private String salutation;
+
     @Column(name = "raw_job_text")
     private String rawJobText;
 

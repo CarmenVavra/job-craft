@@ -74,6 +74,47 @@ describe('shared components', () => {
       expect(saved).toEqual([{ index: 0, text: 'Eins neu' }]);
     });
 
+    it('edits the salutation and offers a reset when it was customised', async () => {
+      const fixture = TestBed.createComponent(LetterSheetComponent);
+      fixture.componentRef.setInput('meta', {
+        senderName: '',
+        senderLine: '',
+        recipientLines: [],
+        dateLine: '',
+        subject: '',
+        salutation: 'Sehr geehrte Frau Dr. Kessler,',
+        closing: 'Mit freundlichen Grüßen',
+      });
+      fixture.componentRef.setInput('paragraphs', ['Eins']);
+      fixture.componentRef.setInput('editable', true);
+      const saved: (string | null)[] = [];
+      fixture.componentInstance.salutationSave.subscribe((s) => saved.push(s));
+      await fixture.whenStable();
+      const el: HTMLElement = fixture.nativeElement;
+      expect(el.querySelectorAll('.salutation-tools .tool').length).toBe(1);
+
+      (el.querySelector('.salutation-tools .tool') as HTMLButtonElement).click();
+      await fixture.whenStable();
+      const input = el.querySelector('.salutation-input') as HTMLInputElement;
+      expect(input.value).toBe('Sehr geehrte Frau Dr. Kessler,');
+      input.value = 'Liebe Frau Kessler,';
+      input.dispatchEvent(new Event('input'));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      expect(saved).toEqual(['Liebe Frau Kessler,']);
+
+      fixture.componentRef.setInput('customSalutation', true);
+      fixture.componentRef.setInput('meta', {
+        ...fixture.componentInstance.meta()!,
+        salutation: 'Liebe Frau Kessler,',
+      });
+      await fixture.whenStable();
+      expect(el.querySelector('.salutation-input')).toBeNull();
+      const tools = el.querySelectorAll('.salutation-tools .tool');
+      expect(text(tools[1])).toBe('Automatisch');
+      (tools[1] as HTMLButtonElement).click();
+      expect(saved).toEqual(['Liebe Frau Kessler,', null]);
+    });
+
     it('cancels editing with escape and hides tools when not editable', async () => {
       const fixture = TestBed.createComponent(LetterSheetComponent);
       fixture.componentRef.setInput('paragraphs', ['Eins']);

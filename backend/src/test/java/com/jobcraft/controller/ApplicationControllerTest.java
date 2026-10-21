@@ -109,6 +109,25 @@ class ApplicationControllerTest {
     }
 
     @Test
+    void updatesSalutation() throws Exception {
+        when(applicationService.updateSalutation(USER_ID, APP_ID, "Liebe Frau Kessler,"))
+                .thenReturn(detail(ApplicationStatus.DRAFT));
+
+        mvc.perform(put("/api/applications/" + APP_ID + "/salutation").with(user())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"salutation\":\"Liebe Frau Kessler,\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void rejectsTooLongSalutation() throws Exception {
+        mvc.perform(put("/api/applications/" + APP_ID + "/salutation").with(user())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"salutation\":\"" + "x".repeat(201) + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Die Anrede darf höchstens 200 Zeichen lang sein."));
+    }
+
+    @Test
     void savesManuallyEditedParagraphs() throws Exception {
         when(applicationService.updateParagraphs(USER_ID, APP_ID, List.of("Eins", "Zwei")))
                 .thenReturn(detail(ApplicationStatus.DRAFT));
@@ -149,7 +168,7 @@ class ApplicationControllerTest {
     }
 
     private static ApplicationDetailDto detail(ApplicationStatus status) {
-        return new ApplicationDetailDto(APP_ID, "https://karriere.example.de/jobs/1", null, null, null, null, List.of(),
+        return new ApplicationDetailDto(APP_ID, "https://karriere.example.de/jobs/1", null, null, null, null, null, List.of(),
                 List.of(), List.of(), Tone.FORMAL, LetterLength.STANDARD, status, 0, null, Instant.now(),
                 new LetterMetaDto("", "", List.of(), "", "", "", ""), List.of(), List.of());
     }

@@ -116,6 +116,32 @@ describe('EditorComponent', () => {
     expect(el.querySelector('.paragraph.changed')?.textContent).toBe('Absatz eins geändert');
   });
 
+  it('saves a custom salutation and can switch back to the automatic one', async () => {
+    const { fixture, el } = await setup();
+    (el.querySelector('.salutation-tools .tool') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    const input = el.querySelector('.salutation-input') as HTMLInputElement;
+    input.value = 'Liebe Frau Kessler,';
+    input.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    (el.querySelector('.edit-save') as HTMLButtonElement).click();
+
+    const req = http.expectOne('/api/applications/app-1/salutation');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ salutation: 'Liebe Frau Kessler,' });
+    const updated = applicationFixture({ customSalutation: 'Liebe Frau Kessler,' });
+    updated.letter = { ...updated.letter, salutation: 'Liebe Frau Kessler,' };
+    req.flush(updated);
+    await fixture.whenStable();
+    expect(text(el.querySelector('.salutation'))).toBe('Liebe Frau Kessler,');
+    expect(text(el.querySelector('.version-chip.active'))).toBe('v2');
+
+    (el.querySelectorAll('.salutation-tools .tool')[1] as HTMLButtonElement).click();
+    expect(http.expectOne('/api/applications/app-1/salutation').request.body).toEqual({
+      salutation: null,
+    });
+  });
+
   it('deletes a paragraph and disables editing for older versions', async () => {
     const { fixture, el } = await setup();
     (el.querySelectorAll('.paragraph-tools .danger')[0] as HTMLButtonElement).click();

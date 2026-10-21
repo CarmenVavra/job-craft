@@ -17,6 +17,7 @@ public record ApplicationDetailDto(
         String companyName,
         String contactPerson,
         String recipientAddress,
+        String customSalutation,
         List<RequirementDto> requirements,
         List<String> tasks,
         List<UUID> contextDocumentIds,
