@@ -9,6 +9,7 @@ import com.jobcraft.model.DocumentStatus;
 import com.jobcraft.model.Requirement;
 import com.jobcraft.repository.ApplicationRepository;
 import com.jobcraft.repository.DocumentRepository;
+import com.jobcraft.repository.ProfileNoteRepository;
 import com.jobcraft.service.ai.CoverLetterAi;
 import com.jobcraft.service.ai.JobExtraction;
 import com.jobcraft.service.scraping.HtmlCleaner;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -46,6 +48,7 @@ public class ApplicationAnalysisWorker {
 
     private final ApplicationRepository applicationRepository;
     private final DocumentRepository documentRepository;
+    private final ProfileNoteRepository noteRepository;
     private final JobScraperService scraperService;
     private final CoverLetterAi ai;
 
@@ -83,8 +86,11 @@ public class ApplicationAnalysisWorker {
             List<Document> ready = documentRepository.findByUserIdAndStatus(app.getUserId(), DocumentStatus.READY);
             List<Document> profileDocs = ready.stream().filter(d -> PROFILE_CATEGORIES.contains(d.getCategory()))
                     .toList();
-            String applicantText = (profileDocs.isEmpty() ? ready : profileDocs).stream()
-                    .map(Document::getExtractedText).filter(t -> t != null && !t.isBlank())
+            String applicantText = Stream.concat((profileDocs.isEmpty() ? ready : profileDocs).stream()
+                            .map(Document::getExtractedText),
+                    noteRepository.findByUserIdAndIncludedTrueOrderByCreatedAtAsc(app.getUserId()).stream()
+                            .map(n -> n.getTitle() + ":\n" + n.getContent()))
+                    .filter(t -> t != null && !t.isBlank())
                     .collect(Collectors.joining("\n\n"));
             List<Boolean> matches = ai.matchRequirements(job.requirements(), applicantText);
             List<Requirement> requirements = new ArrayList<>();

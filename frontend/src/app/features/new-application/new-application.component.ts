@@ -11,10 +11,11 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ApplicationService } from '../../core/api/application.service';
 import { DocumentStore } from '../../core/api/document.store';
+import { NoteStore } from '../../core/api/note.store';
 import { ApplicationDetail, LetterLength, Requirement, Tone } from '../../core/models/api.models';
 import {
   CATEGORY_LABELS,
@@ -38,7 +39,7 @@ const STEP_PACE_MS = 650;
 /** Neue Bewerbung: Stellen-URL → Analyse → Eckdaten prüfen & KI-Kontext wählen → Entwurf generieren. */
 @Component({
   selector: 'app-new-application',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './new-application.component.html',
   styleUrl: './new-application.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +47,7 @@ const STEP_PACE_MS = 650;
 export class NewApplicationComponent implements OnInit {
   private readonly api = inject(ApplicationService);
   private readonly documentStore = inject(DocumentStore);
+  private readonly noteStore = inject(NoteStore);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly destroyRef = inject(DestroyRef);
@@ -81,6 +83,7 @@ export class NewApplicationComponent implements OnInit {
   protected readonly generateError = signal('');
 
   protected readonly readyDocuments = this.documentStore.readyDocuments;
+  protected readonly includedNotes = this.noteStore.includedNotes;
   protected readonly matchLabel = computed(() => {
     const reqs = this.requirements();
     return `${reqs.filter((r) => r.matched).length} von ${reqs.length} Anforderungen erfüllt`;

@@ -2,10 +2,16 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { applicationFixture, documentFixture, profileFixture } from '../../../testing/fixtures';
+import {
+  applicationFixture,
+  documentFixture,
+  noteFixture,
+  profileFixture,
+} from '../../../testing/fixtures';
 import { ApplicationDetail } from '../models/api.models';
 import { ApplicationService } from './application.service';
 import { DocumentStore } from './document.store';
+import { NoteStore } from './note.store';
 import { ProfileStore } from './profile.store';
 import { SystemService } from './system.service';
 
@@ -37,6 +43,34 @@ describe('API services', () => {
       expect(req.request.method).toBe('PUT');
       req.flush(profileFixture({ fullName: 'Lena H.' }));
       expect(store.profile()?.fullName).toBe('Lena H.');
+    });
+  });
+
+  describe('NoteStore', () => {
+    it('loads, creates, updates and removes notes', () => {
+      const store = TestBed.inject(NoteStore);
+      store.load().subscribe();
+      http.expectOne('/api/notes').flush([noteFixture()]);
+      expect(store.includedNotes().length).toBe(1);
+
+      store.create({ title: 'Ehrenamt', content: 'Trainerin', included: true }).subscribe();
+      const create = http.expectOne('/api/notes');
+      expect(create.request.method).toBe('POST');
+      create.flush(noteFixture({ id: 'note-2', title: 'Ehrenamt' }));
+      expect(store.notes().map((n) => n.title)).toEqual([
+        'Privatprojekt: Haushaltsbuch-App',
+        'Ehrenamt',
+      ]);
+
+      store.update('note-1', { title: 'Privatprojekt', content: 'x', included: false }).subscribe();
+      const update = http.expectOne('/api/notes/note-1');
+      expect(update.request.method).toBe('PUT');
+      update.flush(noteFixture({ included: false }));
+      expect(store.includedNotes().map((n) => n.id)).toEqual(['note-2']);
+
+      store.remove('note-2').subscribe();
+      http.expectOne({ method: 'DELETE', url: '/api/notes/note-2' }).flush(null);
+      expect(store.notes().length).toBe(1);
     });
   });
 

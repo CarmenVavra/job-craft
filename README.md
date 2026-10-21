@@ -1,7 +1,7 @@
 # JobCraft – Jede Bewerbung maßgeschneidert
 
-JobCraft erstellt maßgeschneiderte Bewerbungsanschreiben: Briefkopf und Dokumente (Lebenslauf, Skill-Profil,
-Zeugnisse) hinterlegen, Link zur Stellenanzeige einfügen, Analyse prüfen, KI-Entwurf im Chat verfeinern
+JobCraft erstellt maßgeschneiderte Bewerbungsanschreiben: Briefkopf, Dokumente (Lebenslauf, Skill-Profil,
+Zeugnisse) und weitere Angaben „Über mich“ (z. B. Privatprojekte) hinterlegen, Link zur Stellenanzeige einfügen, Analyse prüfen, KI-Entwurf im Chat verfeinern
 (versioniert) und als druckfertiges PDF nach DIN 5008 exportieren.
 
 Grundlagen: `Konzept.pdf`, `claude_code_spezifikation.md`, Design-Handoff unter `UI_Mockups/design_handoff_jobcraft/`.
@@ -54,6 +54,7 @@ Fehlerbehandlung über `@RestControllerAdvice` (`ApiError`, keine Stacktraces).
 |---|---|
 | Auth | Registrierung/Login mit BCrypt, zustandslose JWTs (HS256), Passwort ändern |
 | Profil | Briefkopf inkl. eigener Felder (JSON-Spalte), Vorlage Klassisch/Modern |
+| Über mich | Weitere Angaben, die nicht im Lebenslauf stehen (Privatprojekte, Weiterbildungen …), je Angabe ein-/ausschaltbar; aktive Angaben fließen in Anforderungsabgleich und Anschreiben ein (`<weitere_angaben>` im Prompt) |
 | Dokumente | Upload PDF/DOCX ≤ 10 MB (Signaturprüfung), Kategorie-Erkennung, asynchrone Textextraktion (PDFBox/POI), Seitenvorschau als PNG, Ablage lokal oder S3/MinIO |
 | Analyse | Asynchron in 4 Schritten (Seite abrufen → bereinigen → Eckdaten → Profilabgleich), Fortschritt per Polling. Abruf mit Playwright (Chromium headless), Fallback JSoup; Schutz vor internen Adressen (SSRF) |
 | KI | Offizielles Anthropic Java SDK mit strukturierten JSON-Ausgaben (`AnthropicCoverLetterAi`), sonst `TemplateCoverLetterAi` (Demo) |
@@ -63,7 +64,7 @@ Fehlerbehandlung über `@RestControllerAdvice` (`ApiError`, keine Stacktraces).
 
 **Frontend** – `core/` (Auth, Interceptor, Guards, API-Services/Signal-Stores, Hilfsfunktionen), `shared/` (Shell,
 Briefbogen, Logo, Toast), `features/` (Login, Übersicht, Neue Bewerbung, Editor + PDF-Dialog, Dokumente + Vorschau,
-Briefkopf). Design-Tokens aus dem Handoff stehen in `src/styles.scss`.
+Über mich, Briefkopf). Design-Tokens aus dem Handoff stehen in `src/styles.scss`.
 
 ### REST-API
 
@@ -72,6 +73,7 @@ Briefkopf). Design-Tokens aus dem Handoff stehen in `src/styles.scss`.
 | `POST /api/auth/register`, `POST /api/auth/login` | Konto anlegen / anmelden (JWT) |
 | `GET /api/auth/me`, `PUT /api/auth/password` | Benutzer / Passwort ändern |
 | `GET`/`PUT /api/profile` | Briefkopf-Stammdaten |
+| `GET`/`POST /api/notes`, `PUT`/`DELETE /api/notes/{id}` | Weitere Angaben „Über mich“ |
 | `GET`/`POST /api/documents` | Dokumente auflisten / hochladen (multipart `file`) |
 | `GET /api/documents/{id}` · `/file` · `/preview` | Details mit Text · Originaldatei · erste Seite als PNG |
 | `PATCH`/`DELETE /api/documents/{id}` | Kategorie ändern / löschen |

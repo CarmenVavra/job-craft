@@ -50,6 +50,12 @@ export const routes: Routes = [
           import('./features/documents/documents.component').then((m) => m.DocumentsComponent),
       },
       {
+        path: 'ueber-mich',
+        title: 'Über mich – JobCraft',
+        loadComponent: () =>
+          import('./features/about/about.component').then((m) => m.AboutComponent),
+      },
+      {
         path: 'briefkopf',
         title: 'Briefkopf – JobCraft',
         loadComponent: () =>

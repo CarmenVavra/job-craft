@@ -108,7 +108,7 @@ class TemplateCoverLetterAiTest {
 
     private static GenerationContext context(LetterLength length) {
         return new GenerationContext("Lena Hoffmann", List.of("Verfügbarkeit: 1. Januar 2027"),
-                List.of(new GenerationContext.DocumentText("cv.pdf", "Lebenslauf", "Englisch (C1)")),
+                List.of(new GenerationContext.DocumentText("cv.pdf", "Lebenslauf", "Englisch (C1)")), List.of(),
                 "Quantis Software GmbH", "Senior Fullstack Entwickler (m/w/d)",
                 List.of(new Requirement("Java 17+ & Spring Boot", true), new Requirement("Kubernetes / Docker", false)),
                 List.of("Konzeption neuer Features", "Weiterentwicklung der Microservices", "Code-Reviews"),

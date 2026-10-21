@@ -1,0 +1,130 @@
+<div class="jc-page about">
+  <header class="jc-page-head">
+    <div>
+      <h1>Über mich</h1>
+      <p>
+        Angaben, die nicht im Lebenslauf stehen – z. B. Privatprojekte, Weiterbildungen oder
+        Ehrenamt. Die KI berücksichtigt sie bei Analyse und Anschreiben.
+      </p>
+    </div>
+    <button
+      type="button"
+      class="jc-btn jc-btn-primary"
+      [disabled]="editing() !== null"
+      (click)="startNew()"
+    >
+      + Neue Angabe
+    </button>
+  </header>
+
+  @if (error() && editing() === null) {
+    <div class="jc-error-box" role="alert">{{ error() }}</div>
+  }
+
+  <ng-template #editor>
+    <form class="jc-card editor" (ngSubmit)="save()">
+      <label class="jc-field">
+        <span class="jc-label">Titel</span>
+        <input
+          class="jc-input"
+          name="title"
+          placeholder="z. B. Privatprojekt: Haushaltsbuch-App"
+          [maxlength]="maxTitle"
+          [ngModel]="draftTitle()"
+          (ngModelChange)="draftTitle.set($event)"
+        />
+      </label>
+      <label class="jc-field">
+        <span class="jc-label">Beschreibung</span>
+        <textarea
+          class="jc-input"
+          name="content"
+          rows="7"
+          placeholder="Was hast du gemacht, mit welchen Technologien, was hast du dabei gelernt? Stichpunkte reichen – die KI formuliert daraus passende Sätze."
+          [maxlength]="maxContent"
+          [ngModel]="draftContent()"
+          (ngModelChange)="draftContent.set($event)"
+        ></textarea>
+        <span class="counter">{{ draftContent().length }} / {{ maxContent }}</span>
+      </label>
+      <label class="include">
+        <input
+          type="checkbox"
+          name="included"
+          [ngModel]="draftIncluded()"
+          (ngModelChange)="draftIncluded.set($event)"
+        />
+        Bei Analyse und Anschreiben berücksichtigen
+      </label>
+      @if (error()) {
+        <div class="jc-error-box" role="alert">{{ error() }}</div>
+      }
+      <div class="editor-actions">
+        <button type="button" class="jc-btn jc-btn-secondary" (click)="cancel()">Abbrechen</button>
+        <button type="submit" class="jc-btn jc-btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Speichert …' : 'Speichern' }}
+        </button>
+      </div>
+    </form>
+  </ng-template>
+
+  @if (editing() === 'new') {
+    <ng-container [ngTemplateOutlet]="editor" />
+  }
+
+  <div class="list">
+    @for (note of notes(); track note.id) {
+      @if (editing() === note.id) {
+        <ng-container [ngTemplateOutlet]="editor" />
+      } @else {
+        <article class="jc-card note" [class.paused]="!note.included">
+          <div class="note-head">
+            <h3>{{ note.title }}</h3>
+            <button
+              type="button"
+              class="jc-pill include-pill"
+              role="switch"
+              [class.on]="note.included"
+              [attr.aria-checked]="note.included"
+              title="Umschalten, ob die KI diese Angabe berücksichtigt"
+              (click)="toggleIncluded(note)"
+            >
+              {{ note.included ? '✓ Wird berücksichtigt' : 'Nicht berücksichtigt' }}
+            </button>
+          </div>
+          <p class="content">{{ note.content }}</p>
+          <div class="note-foot">
+            <span class="meta">{{ changed(note) }}</span>
+            <div class="actions">
+              <button
+                type="button"
+                class="jc-btn-small"
+                [disabled]="editing() !== null"
+                (click)="startEdit(note)"
+              >
+                Bearbeiten
+              </button>
+              <button type="button" class="jc-btn-ghost-danger" (click)="remove(note)">
+                Löschen
+              </button>
+            </div>
+          </div>
+        </article>
+      }
+    } @empty {
+      @if (!loading() && editing() === null) {
+        <div class="jc-card empty">
+          <p>
+            Noch keine Angaben. Erzähl der KI, was nicht im Lebenslauf steht – womit willst du
+            beginnen?
+          </p>
+          <div class="suggestions">
+            @for (s of suggestions; track s) {
+              <button type="button" class="jc-btn-small" (click)="startNew(s)">+ {{ s }}</button>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>

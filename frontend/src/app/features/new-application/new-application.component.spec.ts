@@ -1,9 +1,10 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { applicationFixture, documentFixture } from '../../../testing/fixtures';
+import { applicationFixture, documentFixture, noteFixture } from '../../../testing/fixtures';
 import { testProviders, text } from '../../../testing/providers';
 import { DocumentStore } from '../../core/api/document.store';
+import { NoteStore } from '../../core/api/note.store';
 import { NewApplicationComponent } from './new-application.component';
 
 describe('NewApplicationComponent', () => {
@@ -63,6 +64,10 @@ describe('NewApplicationComponent', () => {
     const store = TestBed.inject(DocumentStore);
     store.load().subscribe();
     http.expectOne('/api/documents').flush([documentFixture()]);
+    TestBed.inject(NoteStore).load().subscribe();
+    http
+      .expectOne('/api/notes')
+      .flush([noteFixture(), noteFixture({ id: 'note-2', included: false })]);
     const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
 
     const fixture = TestBed.createComponent(NewApplicationComponent);
@@ -75,6 +80,9 @@ describe('NewApplicationComponent', () => {
 
     const el: HTMLElement = fixture.nativeElement;
     expect(el.querySelector('.doc .box.on')).not.toBeNull();
+    expect(text(el.querySelector('.notes-hint'))).toBe(
+      'Zusätzlich fließt 1 Angabe aus „Über mich“ ein.',
+    );
     (
       el.querySelectorAll('.jc-segmented')[0].querySelectorAll('button')[1] as HTMLButtonElement
     ).click();

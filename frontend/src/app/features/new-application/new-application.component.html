@@ -181,6 +181,19 @@
                 </p>
               }
             </div>
+            <p class="notes-hint">
+              @if (includedNotes().length > 0) {
+                Zusätzlich {{ includedNotes().length === 1 ? 'fließt' : 'fließen' }}
+                <a routerLink="/ueber-mich"
+                  >{{ includedNotes().length }}
+                  {{ includedNotes().length === 1 ? 'Angabe' : 'Angaben' }} aus „Über mich“</a
+                >
+                ein.
+              } @else {
+                Tipp: Privatprojekte &amp; Co. kannst du unter
+                <a routerLink="/ueber-mich">„Über mich“</a> ergänzen.
+              }
+            </p>
             <div class="jc-field">
               <span class="jc-label">Tonalität</span>
               <div class="jc-segmented" role="radiogroup" aria-label="Tonalität">

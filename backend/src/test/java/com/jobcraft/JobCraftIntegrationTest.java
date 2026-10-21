@@ -62,6 +62,20 @@ class JobCraftIntegrationTest {
                          "customFields":[{"label":"Verfügbarkeit","value":"1. Januar 2027"}]}"""))
                 .andExpect(status().isOk());
 
+        String noteId = json(mvc.perform(auth(post("/api/notes"), token).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Privatprojekt\",\"content\":\"Haushaltsbuch mit Angular\",\"included\":true}"))
+                .andExpect(status().isCreated())).get("id").asText();
+        mvc.perform(auth(post("/api/notes"), token).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Hobby\",\"content\":\"Klettern\",\"included\":false}"))
+                .andExpect(status().isCreated());
+        mvc.perform(auth(put("/api/notes/" + noteId), token).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Privatprojekt\",\"content\":\"Haushaltsbuch mit Angular Signals\","
+                                + "\"included\":true}"))
+                .andExpect(status().isOk());
+        JsonNode notes = json(mvc.perform(auth(get("/api/notes"), token)).andExpect(status().isOk()));
+        assertThat(notes).hasSize(2);
+        assertThat(notes.get(0).get("content").asText()).isEqualTo("Haushaltsbuch mit Angular Signals");
+
         byte[] cv = TestPdfs.withLines(List.of("LENA HOFFMANN", "Java 21, Spring Boot, Angular Signals", "PostgreSQL"));
         String docId = json(mvc.perform(multipart("/api/documents")
                         .file(new MockMultipartFile("file", "Lebenslauf_Lena.pdf", "application/pdf", cv))
@@ -92,6 +106,8 @@ class JobCraftIntegrationTest {
         assertThat(generated.get("versions")).hasSize(1);
         assertThat(generated.get("letter").get("salutation").asText()).isEqualTo("Sehr geehrte Frau Dr. Kessler,");
         assertThat(generated.get("messages").get(0).get("meta").asText()).isEqualTo("v1 erstellt");
+        assertThat(generated.get("messages").get(0).get("message").asText())
+                .contains("Grundlage: Lebenslauf, 1 weitere Angabe und");
 
         JsonNode revised = json(mvc.perform(auth(post("/api/applications/" + appId + "/chat"), token)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"message\":\"Einleitung kürzen\"}"))

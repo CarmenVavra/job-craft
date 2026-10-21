@@ -26,6 +26,7 @@ import com.jobcraft.repository.ChatMessageRepository;
 import com.jobcraft.repository.CoverLetterRepository;
 import com.jobcraft.repository.DocumentRepository;
 import com.jobcraft.repository.LatestVersion;
+import com.jobcraft.repository.ProfileNoteRepository;
 import com.jobcraft.repository.ProfileRepository;
 import com.jobcraft.service.ai.CoverLetterAi;
 import com.jobcraft.service.ai.GenerationContext;
@@ -67,6 +68,7 @@ public class ApplicationService {
     private final CoverLetterRepository coverLetterRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final DocumentRepository documentRepository;
+    private final ProfileNoteRepository noteRepository;
     private final ProfileRepository profileRepository;
     private final ApplicationAnalysisWorker analysisWorker;
     private final LetterFormatter letterFormatter;
@@ -165,9 +167,13 @@ public class ApplicationService {
             Application app = load(userId, applicationId);
             int version = nextVersion(app.getId());
             saveVersion(app.getId(), version, paragraphs, List.of());
-            String basis = context.documents().isEmpty() ? "deine Briefkopf-Daten"
-                    : context.documents().stream().map(GenerationContext.DocumentText::category).distinct()
-                    .collect(Collectors.joining(", "));
+            List<String> sources = new ArrayList<>(context.documents().stream()
+                    .map(GenerationContext.DocumentText::category).distinct().toList());
+            if (!context.notes().isEmpty()) {
+                sources.add(context.notes().size() == 1 ? "1 weitere Angabe"
+                        : context.notes().size() + " weitere Angaben");
+            }
+            String basis = sources.isEmpty() ? "deine Briefkopf-Daten" : String.join(", ", sources);
             String text = version == 1
                     ? "Dein erster Entwurf ist fertig. Grundlage: " + basis + " und die " + context.requirements().size()
                     + " Anforderungen der Anzeige. Was soll ich anpassen?"
@@ -364,7 +370,10 @@ public class ApplicationService {
                 : profile.getCustomFields().stream()
                 .filter(f -> f.label() != null && !f.label().isBlank() && f.value() != null && !f.value().isBlank())
                 .map(f -> f.label() + ": " + f.value()).toList();
-        return new GenerationContext(profile == null ? "" : profile.getFullName(), customFields, documents,
+        List<GenerationContext.NoteText> notes = noteRepository
+                .findByUserIdAndIncludedTrueOrderByCreatedAtAsc(app.getUserId()).stream()
+                .map(n -> new GenerationContext.NoteText(n.getTitle(), n.getContent())).toList();
+        return new GenerationContext(profile == null ? "" : profile.getFullName(), customFields, documents, notes,
                 nullToEmpty(app.getCompanyName()), nullToEmpty(app.getJobTitle()),
                 app.getRequirements() == null ? List.of() : List.copyOf(app.getRequirements()),
                 app.getTasks() == null ? List.of() : List.copyOf(app.getTasks()),

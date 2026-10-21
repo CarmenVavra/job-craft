@@ -52,6 +52,23 @@ export interface Profile {
   customFields: CustomField[];
 }
 
+/** Weitere Angabe zur Person („Über mich“), z. B. ein Privatprojekt. */
+export interface ProfileNote {
+  id: string;
+  title: string;
+  content: string;
+  /** Fließt in Analyse und Anschreiben ein. */
+  included: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProfileNoteRequest {
+  title: string;
+  content: string;
+  included: boolean;
+}
+
 export interface DocumentSummary {
   id: string;
   fileName: string;

@@ -10,6 +10,8 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Regel- und vorlagenbasierte Umsetzung ohne Sprachmodell (Demo-Modus, wenn kein API-Key konfiguriert ist).
@@ -239,7 +241,8 @@ public class TemplateCoverLetterAi implements CoverLetterAi {
     }
 
     private static Optional<String> documentsText(GenerationContext ctx) {
-        String text = String.join("\n", ctx.documents().stream().map(GenerationContext.DocumentText::text).toList());
+        String text = Stream.concat(ctx.documents().stream().map(GenerationContext.DocumentText::text),
+                ctx.notes().stream().map(GenerationContext.NoteText::content)).collect(Collectors.joining("\n"));
         return text.isBlank() ? Optional.empty() : Optional.of(text);
     }
 

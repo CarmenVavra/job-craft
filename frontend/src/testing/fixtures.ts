@@ -3,6 +3,7 @@ import {
   ApplicationSummary,
   DocumentSummary,
   Profile,
+  ProfileNote,
 } from '../app/core/models/api.models';
 
 /** Testdaten, angelehnt an die Mock-Daten des Prototyps. */
@@ -32,6 +33,18 @@ export function documentFixture(overrides: Partial<DocumentSummary> = {}): Docum
     pageCount: 2,
     status: 'READY',
     createdAt: '2026-10-02T10:00:00Z',
+    ...overrides,
+  };
+}
+
+export function noteFixture(overrides: Partial<ProfileNote> = {}): ProfileNote {
+  return {
+    id: 'note-1',
+    title: 'Privatprojekt: Haushaltsbuch-App',
+    content: 'Angular 21 mit Signals, Spring Boot und PostgreSQL',
+    included: true,
+    createdAt: '2026-10-20T10:00:00Z',
+    updatedAt: '2026-10-21T10:00:00Z',
     ...overrides,
   };
 }

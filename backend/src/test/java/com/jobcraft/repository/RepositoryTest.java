@@ -7,6 +7,7 @@ import com.jobcraft.model.ApplicationStatus;
 import com.jobcraft.model.CoverLetter;
 import com.jobcraft.model.CustomField;
 import com.jobcraft.model.Profile;
+import com.jobcraft.model.ProfileNote;
 import com.jobcraft.model.Requirement;
 import com.jobcraft.model.User;
 import java.util.ArrayList;
@@ -37,6 +38,9 @@ class RepositoryTest {
 
     @Autowired
     private CoverLetterRepository coverLetterRepository;
+
+    @Autowired
+    private ProfileNoteRepository noteRepository;
 
     private UUID userId;
 
@@ -96,6 +100,29 @@ class RepositoryTest {
 
         assertThat(applicationRepository.findByIdAndUserId(app.getId(), userId)).isPresent();
         assertThat(applicationRepository.findByIdAndUserId(app.getId(), UUID.randomUUID())).isEmpty();
+    }
+
+    @Test
+    void listsOnlyIncludedNotesOfOwner() {
+        note(userId, "Privatprojekt", true);
+        note(userId, "Hobby", false);
+        em.flush();
+        em.clear();
+
+        assertThat(noteRepository.findByUserIdOrderByCreatedAtAsc(userId)).hasSize(2);
+        assertThat(noteRepository.findByUserIdAndIncludedTrueOrderByCreatedAtAsc(userId))
+                .extracting(ProfileNote::getTitle).containsExactly("Privatprojekt");
+        UUID noteId = noteRepository.findByUserIdOrderByCreatedAtAsc(userId).get(0).getId();
+        assertThat(noteRepository.findByIdAndUserId(noteId, UUID.randomUUID())).isEmpty();
+    }
+
+    private void note(UUID owner, String title, boolean included) {
+        ProfileNote note = new ProfileNote();
+        note.setUserId(owner);
+        note.setTitle(title);
+        note.setContent("Beschreibung");
+        note.setIncluded(included);
+        noteRepository.save(note);
     }
 
     private Application application(ApplicationStatus status, List<Requirement> requirements) {
