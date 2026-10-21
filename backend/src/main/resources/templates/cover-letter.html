@@ -31,9 +31,11 @@
     .head-classic .name { font-size: 22pt; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; }
     .head-classic .contact { text-align: right; font-size: 8.5pt; line-height: 1.6; color: #55544C; }
 
+    /* Schmales Band mit vertikal zentriertem Text; der Abstand darunter hält das Anschriftfeld an der
+       DIN-Position (Band + Abstand = 45 mm wie beim klassischen Briefkopf). */
     .head-modern {
-      height: 45mm; margin: 0 -20mm 0 -25mm; padding: 0 20mm 6mm 25mm; background: #16324F; color: #fff;
-      display: flex; justify-content: space-between; align-items: flex-end; gap: 10mm;
+      height: 30mm; margin: 0 -20mm 15mm -25mm; padding: 0 20mm 0 25mm; background: #16324F; color: #fff;
+      display: flex; justify-content: space-between; align-items: center; gap: 10mm;
     }
     .head-modern .name { font-size: 21pt; font-weight: 700; letter-spacing: -0.015em; line-height: 1.1; }
     .head-modern .address { font-size: 9pt; margin-top: 1.5mm; opacity: .95; }
