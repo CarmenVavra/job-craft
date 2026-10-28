@@ -19,3 +19,6 @@ jobcraft-env.bat
 *.iml
 .DS_Store
 Thumbs.db
+
+# Lokale Tool-Konfiguration (z. B. Vorschau-Ports der Claude-App)
+/project.json
