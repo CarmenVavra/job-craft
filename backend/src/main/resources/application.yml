@@ -60,7 +60,7 @@ jobcraft:
   pdf:
     warm-up: ${JOBCRAFT_PDF_WARMUP:true}
   backup:
-    # Sicherung der lokalen H2-Datenbank beim Start und danach regelmäßig.
+    # Sicherung der Datenbank beim Start und danach regelmäßig (wiederherstellen mit restore.bat).
     enabled: ${JOBCRAFT_BACKUP:true}
     directory: ./data/backups
     interval: PT1H
@@ -80,16 +80,21 @@ management:
       access: unrestricted
 
 ---
+# Lokale Entwicklung: eingebettetes PostgreSQL (siehe EmbeddedPostgresConfig) – keine Installation nötig.
 spring:
   config:
     activate:
       on-profile: dev
-  datasource:
-    # Bewusst ohne AUTO_SERVER: Nur ein Prozess darf die Datei öffnen. Ein zweiter Start schlägt
-    # sichtbar fehl, statt sich still an einen (evtl. hängenden) alten Prozess zu hängen.
-    url: jdbc:h2:file:./data/jobcraft;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
-    username: sa
-    password:
+
+jobcraft:
+  embedded-db:
+    data-directory: ./data/postgres
+    bin-directory: ./data/postgres-bin
+    port: ${JOBCRAFT_DB_PORT:54329}
+    # Frühere H2-Datenbank (ohne .mv.db); wird beim ersten Start einmalig übernommen.
+    legacy-h2-file: ./data/jobcraft
+  # Von restore.bat gesetzt: diese Sicherung beim Start zurückspielen.
+  restore-from: ${JOBCRAFT_RESTORE_FROM:}
 
 ---
 spring:

@@ -1,9 +1,13 @@
 package com.jobcraft.service;
 
 import com.jobcraft.config.JobCraftProperties;
+import com.jobcraft.service.backup.PostgresDump;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -15,13 +19,15 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 /**
- * Sichert die lokale H2-Datenbank als ZIP (beim Start und danach regelmäßig) und behält nur die neuesten Sicherungen.
- * Für PostgreSQL ist der Dienst inaktiv – dort übernimmt die Datenbank-Infrastruktur die Sicherung.
+ * Sichert die Datenbank als ZIP (beim Start und danach regelmäßig) und behält nur die neuesten Sicherungen:
+ * PostgreSQL als logische Sicherung aller Tabellen ({@link PostgresDump}), eine H2-Datei per {@code BACKUP TO}.
+ * Wiederherstellen lässt sich eine PostgreSQL-Sicherung mit {@code restore.bat}.
  */
 @Slf4j
 @Service
@@ -54,19 +60,39 @@ public class DatabaseBackupService {
     }
 
     /**
-     * Erstellt eine Sicherung, sofern aktiviert und eine dateibasierte H2-Datenbank verwendet wird.
+     * Erstellt eine Sicherung, sofern aktiviert und eine PostgreSQL- oder dateibasierte H2-Datenbank verwendet wird.
      *
      * @return Pfad der Sicherung
      */
     public Optional<Path> backup() {
-        if (config == null || !config.enabled() || !isFileH2()) {
+        if (config == null || !config.enabled()) {
+            return Optional.empty();
+        }
+        String url = jdbcTemplate.execute((Connection c) -> c.getMetaData().getURL());
+        boolean postgres = url != null && url.startsWith("jdbc:postgresql:");
+        boolean h2File = url != null && url.startsWith("jdbc:h2:file:");
+        if (!postgres && !h2File) {
             return Optional.empty();
         }
         try {
             Path dir = Path.of(config.directory()).toAbsolutePath().normalize();
             Files.createDirectories(dir);
             Path target = dir.resolve(PREFIX + LocalDateTime.now(clock).format(STAMP) + ".zip");
-            jdbcTemplate.execute("BACKUP TO '" + target.toString().replace("'", "''") + "'");
+            if (postgres) {
+                // Erst vollständig schreiben, dann umbenennen – so gibt es nie eine halbe Sicherung.
+                Path partial = dir.resolve(target.getFileName() + ".tmp");
+                jdbcTemplate.execute((ConnectionCallback<Void>) c -> {
+                    try (OutputStream out = Files.newOutputStream(partial)) {
+                        PostgresDump.export(c, out);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                    return null;
+                });
+                Files.move(partial, target, StandardCopyOption.ATOMIC_MOVE);
+            } else {
+                jdbcTemplate.execute("BACKUP TO '" + target.toString().replace("'", "''") + "'");
+            }
             prune(dir);
             log.info("Datenbank gesichert: {}", target);
             return Optional.of(target);
@@ -81,11 +107,6 @@ public class DatabaseBackupService {
         } catch (RuntimeException e) {
             log.error("Datenbanksicherung fehlgeschlagen", e);
         }
-    }
-
-    private boolean isFileH2() {
-        String url = jdbcTemplate.execute((Connection c) -> c.getMetaData().getURL());
-        return url != null && url.startsWith("jdbc:h2:file:");
     }
 
     private void prune(Path dir) throws IOException {

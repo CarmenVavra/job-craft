@@ -27,6 +27,9 @@ if not exist "%~dp0frontend\node_modules" (
   popd
 )
 
+rem Eine nach hartem Beenden verwaiste lokale Datenbank wuerde den Start blockieren.
+%JC_PS% -Action StopDb
+
 echo Starte Backend auf http://localhost:8090 ...
 start "JobCraft Backend" /D "%~dp0backend" cmd /k call "%~dp0backend\mvnw.cmd" spring-boot:run
 
