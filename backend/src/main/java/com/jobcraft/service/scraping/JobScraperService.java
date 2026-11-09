@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -31,6 +33,7 @@ public class JobScraperService {
 
     private static final String USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) JobCraft/1.0";
+    private static final Pattern KARRIERE_JOB_ID = Pattern.compile("\\d{5,}");
 
     private final BrowserManager browserManager;
     private final JobCraftProperties properties;
@@ -46,6 +49,7 @@ public class JobScraperService {
         if (properties.scraper().demoEnabled() && DEMO_HOST.equalsIgnoreCase(uri.getHost())) {
             return loadDemo();
         }
+        uri = toJobAdUri(uri);
         UrlGuard.ensurePublicHost(uri);
         if (properties.scraper().useBrowser()) {
             try {
@@ -55,6 +59,32 @@ public class JobScraperService {
             }
         }
         return fetchWithJsoup(uri.toString());
+    }
+
+    /**
+     * Links aus der Trefferliste von karriere.at ({@code /jobs?keywords=…#10009538}) zeigen die Liste; die
+     * ausgewählte Anzeige steht nur im Fragment. Dann wird die Detailseite {@code /jobs/10009538} abgerufen.
+     *
+     * @param uri eingegebene URL
+     * @return URL der eigentlichen Anzeige
+     */
+    static URI toJobAdUri(URI uri) {
+        String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.ROOT);
+        String fragment = uri.getFragment();
+        boolean karriere = "karriere.at".equals(host) || host.endsWith(".karriere.at");
+        if (karriere && fragment != null && KARRIERE_JOB_ID.matcher(fragment).matches()
+                && !KARRIERE_JOB_ID.matcher(lastSegment(uri.getPath())).matches()) {
+            return URI.create(uri.getScheme() + "://" + uri.getHost() + "/jobs/" + fragment);
+        }
+        return uri;
+    }
+
+    private static String lastSegment(String path) {
+        if (path == null) {
+            return "";
+        }
+        String trimmed = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+        return trimmed.substring(trimmed.lastIndexOf('/') + 1);
     }
 
     private String fetchWithBrowser(String url) {
